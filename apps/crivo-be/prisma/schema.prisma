@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN     // Administrador
+  MODERATOR // Moderador
+  SUPPORT   // Suporte
+}
+
+enum PlanType {
+  BASIC
+  INTERMEDIATE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE          // Ativo
+  CANCELED        // Cancelado
+  EXPIRED         // Expirado
+  PENDING_PAYMENT // Aguardando pagamento
+}
+
+model User {
+  id         String  @id @default(uuid())
+  keycloakId String  @unique
+  email      String  @unique
+  firstname       String?
+  lastname      String?
+
+  role UserRole @default(SUPPORT)
+  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+}
+
+model Company {
+  id   String @id @default(uuid())
+  name String @unique
+  taxId String @unique
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Plan {
+  id String @id @default(uuid())
+
+  type        PlanType @unique
+  name        String
+  description String?
+
+  // Preço mensal em centavos (0 para gratuito)
+  priceMonthly Int
+
+  // Limites
+  maxProperties Int // -1 = ilimitado
+  maxPhotos     Int
+  maxVideos     Int // 0 = sem vídeo permitido
+
+  // Funcionalidades
+  featuredInSearch   Boolean @default(false)
+  featuredInHomepage Boolean @default(false)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model Subscription {
+  id           String     @id @default(uuid())
+  
+  planId String
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  status SubscriptionStatus @default(ACTIVE)
+
+  // Período
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+
+  // Pagamento (futuro)
+  amount    Int?    // Valor pago em centavos
+  paymentId String? // ID do pagamento externo
+
+  // Controle
+  canceledAt   DateTime?
+  cancelReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId])
+  @@index([status])
+  @@index([endDate])
+}
