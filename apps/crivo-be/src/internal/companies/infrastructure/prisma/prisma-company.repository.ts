@@ -14,9 +14,20 @@ import { CompanyEntity } from '../../domain/entities/company.entity';
 export class PrismaCompanyRepository implements CompanyRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private toEntity(record: Record<string, unknown>): CompanyEntity {
+    return new CompanyEntity({
+      id: record.id as string,
+      name: record.name as string,
+      taxId: record.taxId as string,
+      stripeCustomerId: (record.stripeCustomerId as string) ?? null,
+      createdAt: record.createdAt as Date,
+      updatedAt: record.updatedAt as Date,
+    });
+  }
+
   async create(data: CreateCompanyData): Promise<CompanyEntity> {
     const company = await this.prisma.company.create({ data });
-    return new CompanyEntity(company);
+    return this.toEntity(company);
   }
 
   async findMany(
@@ -43,7 +54,7 @@ export class PrismaCompanyRepository implements CompanyRepository {
     ]);
 
     return {
-      items: items.map((item) => new CompanyEntity(item)),
+      items: items.map((item) => this.toEntity(item)),
       total,
       page,
       limit,
@@ -53,12 +64,12 @@ export class PrismaCompanyRepository implements CompanyRepository {
 
   async findById(id: string): Promise<CompanyEntity | null> {
     const company = await this.prisma.company.findUnique({ where: { id } });
-    return company ? new CompanyEntity(company) : null;
+    return company ? this.toEntity(company) : null;
   }
 
   async findByTaxId(taxId: string): Promise<CompanyEntity | null> {
     const company = await this.prisma.company.findUnique({ where: { taxId } });
-    return company ? new CompanyEntity(company) : null;
+    return company ? this.toEntity(company) : null;
   }
 
   async update(id: string, data: UpdateCompanyData): Promise<CompanyEntity> {
@@ -66,7 +77,7 @@ export class PrismaCompanyRepository implements CompanyRepository {
       where: { id },
       data,
     });
-    return new CompanyEntity(company);
+    return this.toEntity(company);
   }
 
   async delete(id: string): Promise<void> {

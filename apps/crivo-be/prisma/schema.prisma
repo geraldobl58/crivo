@@ -14,17 +14,28 @@ enum UserRole {
 }
 
 enum PlanType {
-  TRIAL // Período de teste gratuito
-  BASIC // Plano básico, ideal para pequenas empresas ou uso individual
-  PROFESSIONAL // Plano profissional, ideal para empresas em crescimento
-  ENTERPRISE // Plano empresarial, ideal para grandes empresas
+  TRIAL // Período de teste gratuito - 1 dia de teste
+  BASIC // Plano básico, ideal para pequenas empresas ou uso individual - 1990 por mês
+  PROFESSIONAL // Plano profissional, ideal para empresas em crescimento - 4990 por mês
+  ENTERPRISE // Plano empresarial, ideal para grandes empresas - Entrar em contato para preço personalizado
 }
 
 enum SubscriptionStatus {
-  ACTIVE // Assinatura ativa
-  CANCELED // Assinatura cancelada
-  EXPIRED // Assinatura expirada
-  PENDING_PAYMENT // Pagamento pendente
+  TRIALING        // Período de teste gratuito
+  ACTIVE          // Assinatura ativa e paga
+  PAST_DUE        // Pagamento atrasado (Stripe ainda tentando cobrar)
+  CANCELED        // Assinatura cancelada
+  EXPIRED         // Assinatura expirada (trial ou período acabou)
+  INCOMPLETE      // Pagamento inicial falhou
+  PENDING_PAYMENT // Aguardando confirmação do pagamento
+}
+
+enum InvoiceStatus {
+  DRAFT     // Rascunho (ainda não finalizada)
+  OPEN      // Aberta (aguardando pagamento)
+  PAID      // Paga com sucesso
+  VOID      // Anulada
+  UNCOLLECTIBLE // Não cobrável
 }
 
 model User {
@@ -51,6 +62,9 @@ model Company {
   name  String @unique
   taxId String @unique // CNPJ/CPF
 
+  // Stripe
+  stripeCustomerId String? @unique // ID do customer no Stripe
+
   // Relação com Usuários
   users User[]
 
@@ -66,15 +80,20 @@ model Plan {
   type        PlanType @unique
   name        String
   description String?
-  
-  priceMonthly Int // Em centavos
 
-  // Limites solicitados
-  maxUsers Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
-  maxCompany Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
+  priceMonthly Int // Em centavos (ex: 1990 = R$19,90)
 
-  // Exemplo de outro limite comum em SaaS contábil
+  // Stripe
+  stripePriceId String? @unique // ID do price no Stripe (ex: price_xxx)
+
+  // Trial
+  trialDays Int @default(0) // Dias de teste gratuito (1 para TRIAL)
+
+  // Limites do plano (-1 = ilimitado)
+  maxUsers        Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
+  maxCompany      Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
   maxTransactions Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
+  maxContacts     Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
 
   isActive Boolean @default(true)
 
@@ -88,7 +107,7 @@ model Plan {
 
 model Subscription {
   id        String @id @default(uuid())
-  
+
   // Ligação com a Empresa
   companyId String @unique // Uma empresa tem apenas uma assinatura
   company   Company @relation(fields: [companyId], references: [id])
@@ -97,14 +116,63 @@ model Subscription {
   planId    String
   plan      Plan   @relation(fields: [planId], references: [id])
 
-  status    SubscriptionStatus @default(ACTIVE)
+  // Stripe
+  stripeSubscriptionId String? @unique // ID da subscription no Stripe (ex: sub_xxx)
 
-  startDate DateTime @default(now())
-  endDate   DateTime?
+  status    SubscriptionStatus @default(TRIALING)
+
+  // Período atual de cobrança (atualizado via webhook do Stripe)
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+
+  // Trial
+  trialStart DateTime? // Início do período de teste
+  trialEnd   DateTime? // Fim do período de teste
+
+  // Cancelamento
+  cancelAtPeriodEnd Boolean @default(false) // Cancela no fim do período atual
+  canceledAt        DateTime?               // Data efetiva do cancelamento
+
+  // Invoices (histórico de cobranças)
+  invoices Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([companyId])
   @@index([planId])
+  @@index([status])
+}
+
+model Invoice {
+  id String @id @default(uuid())
+
+  // Ligação com a Subscription
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  // Stripe
+  stripeInvoiceId   String? @unique // ID da invoice no Stripe (ex: in_xxx)
+  stripePaymentIntentId String?     // ID do payment intent (ex: pi_xxx)
+
+  status      InvoiceStatus @default(DRAFT)
+  amountDue   Int           // Valor cobrado em centavos
+  amountPaid  Int @default(0) // Valor efetivamente pago em centavos
+  currency    String @default("brl")
+
+  // URL do boleto/fatura no Stripe (para o cliente visualizar)
+  invoiceUrl  String?
+  invoicePdf  String?
+
+  // Período de referência da cobrança
+  periodStart DateTime?
+  periodEnd   DateTime?
+
+  paidAt DateTime? // Data do pagamento efetivo
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
 }
