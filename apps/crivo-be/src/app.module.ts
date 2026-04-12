@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 
 import { PrismaModule } from './libs/prisma/prisma.module';
+import { CompanyModule } from './internal/companies/company.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { PrismaModule } from './libs/prisma/prisma.module';
       },
     ]),
     PrismaModule,
+    CompanyModule,
   ],
   providers: [
     {

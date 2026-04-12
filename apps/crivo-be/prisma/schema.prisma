@@ -7,104 +7,104 @@ datasource db {
 }
 
 enum UserRole {
-  ADMIN     // Administrador
-  MODERATOR // Moderador
-  SUPPORT   // Suporte
+  OWNER     // Dono da conta (PJ)
+  ADMIN     // Administrador da empresa
+  USER      // Usuário comum
+  SUPPORT   // Suporte do sistema (você)
 }
 
 enum PlanType {
-  BASIC
-  INTERMEDIATE
-  PREMIUM
+  TRIAL // Período de teste gratuito
+  BASIC // Plano básico, ideal para pequenas empresas ou uso individual
+  PROFESSIONAL // Plano profissional, ideal para empresas em crescimento
+  ENTERPRISE // Plano empresarial, ideal para grandes empresas
 }
 
 enum SubscriptionStatus {
-  ACTIVE          // Ativo
-  CANCELED        // Cancelado
-  EXPIRED         // Expirado
-  PENDING_PAYMENT // Aguardando pagamento
+  ACTIVE // Assinatura ativa
+  CANCELED // Assinatura cancelada
+  EXPIRED // Assinatura expirada
+  PENDING_PAYMENT // Pagamento pendente
 }
 
 model User {
   id         String  @id @default(uuid())
   keycloakId String  @unique
   email      String  @unique
-  firstname       String?
-  lastname      String?
+  firstname  String?
+  lastname   String?
+  role       UserRole @default(USER)
 
-  role UserRole @default(SUPPORT)
-  
+  // Relação com a Empresa (Multi-tenancy)
+  companyId  String
+  company    Company @relation(fields: [companyId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([role])
+  @@index([companyId])
 }
 
 model Company {
-  id   String @id @default(uuid())
-  name String @unique
-  taxId String @unique
+  id    String @id @default(uuid())
+  name  String @unique
+  taxId String @unique // CNPJ/CPF
 
+  // Relação com Usuários
+  users User[]
+
+  // Relação com Assinatura (Uma empresa tem uma assinatura ativa)
+  subscription Subscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Plan {
-  id String @id @default(uuid())
-
+  id          String   @id @default(uuid())
   type        PlanType @unique
   name        String
   description String?
+  
+  priceMonthly Int // Em centavos
 
-  // Preço mensal em centavos (0 para gratuito)
-  priceMonthly Int
+  // Limites solicitados
+  maxUsers Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
+  maxCompany Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
 
-  // Limites
-  maxProperties Int // -1 = ilimitado
-  maxPhotos     Int
-  maxVideos     Int // 0 = sem vídeo permitido
-
-  // Funcionalidades
-  featuredInSearch   Boolean @default(false)
-  featuredInHomepage Boolean @default(false)
+  // Exemplo de outro limite comum em SaaS contábil
+  maxTransactions Int @default(-1) // 1 para Basic, 3 para Professional, -1 para Enterprise
 
   isActive Boolean @default(true)
 
+  subscriptions Subscription[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  subscriptions Subscription[]
-
   @@index([type])
-  @@index([isActive])
 }
 
 model Subscription {
-  id           String     @id @default(uuid())
+  id        String @id @default(uuid())
   
-  planId String
-  plan   Plan   @relation(fields: [planId], references: [id])
+  // Ligação com a Empresa
+  companyId String @unique // Uma empresa tem apenas uma assinatura
+  company   Company @relation(fields: [companyId], references: [id])
 
-  status SubscriptionStatus @default(ACTIVE)
+  // Ligação com o Plano
+  planId    String
+  plan      Plan   @relation(fields: [planId], references: [id])
 
-  // Período
-  startDate DateTime  @default(now())
+  status    SubscriptionStatus @default(ACTIVE)
+
+  startDate DateTime @default(now())
   endDate   DateTime?
-
-  // Pagamento (futuro)
-  amount    Int?    // Valor pago em centavos
-  paymentId String? // ID do pagamento externo
-
-  // Controle
-  canceledAt   DateTime?
-  cancelReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([companyId])
   @@index([planId])
-  @@index([status])
-  @@index([endDate])
 }
