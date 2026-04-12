@@ -6,6 +6,7 @@ import { LoggerModule } from 'nestjs-pino';
 
 import { PrismaModule } from './libs/prisma/prisma.module';
 import { CompanyModule } from './internal/companies/company.module';
+import { UserModule } from './internal/users/user.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { CompanyModule } from './internal/companies/company.module';
     ]),
     PrismaModule,
     CompanyModule,
+    UserModule,
   ],
   providers: [
     {
