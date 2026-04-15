@@ -15,12 +15,14 @@ export class CreateCompanyUseCase {
   ) {}
 
   async execute(data: CreateCompanyData): Promise<CompanyEntity> {
-    const existing = await this.companyRepository.findByTaxId(data.taxId);
+    if (data.taxId) {
+      const existing = await this.companyRepository.findByTaxId(data.taxId);
 
-    if (existing) {
-      throw new ConflictException(
-        `Já existe uma empresa com o CNPJ ${data.taxId}`,
-      );
+      if (existing) {
+        throw new ConflictException(
+          `Já existe uma empresa com o CNPJ ${data.taxId}`,
+        );
+      }
     }
 
     return this.companyRepository.create(data);
