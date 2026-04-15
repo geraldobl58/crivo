@@ -5,8 +5,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 
 import { PrismaModule } from './libs/prisma/prisma.module';
+import { AuthModule } from './libs/auth/auth.module';
+import { JwtAuthGuard } from './libs/auth/jwt-auth.guard';
+import { TenantModule } from './libs/tenant/tenant.module';
 import { CompanyModule } from './internal/companies/company.module';
 import { UserModule } from './internal/users/user.module';
+import { OnboardingModule } from './internal/onboarding/onboarding.module';
+import { AuthInternalModule } from './internal/auth/auth.module';
+import { StripeModule } from './internal/stripe/stripe.module';
 
 @Module({
   imports: [
@@ -66,10 +72,19 @@ import { UserModule } from './internal/users/user.module';
       },
     ]),
     PrismaModule,
+    AuthModule,
+    TenantModule,
     CompanyModule,
     UserModule,
+    OnboardingModule,
+    AuthInternalModule,
+    StripeModule,
   ],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
