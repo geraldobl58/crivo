@@ -11,6 +11,7 @@ import { TenantModule } from './libs/tenant/tenant.module';
 import { CompanyModule } from './internal/companies/company.module';
 import { UserModule } from './internal/users/user.module';
 import { PlanModule } from './internal/plans/plan.module';
+import { SubscriptionModule } from './internal/subscriptions/subscription.module';
 import { OnboardingModule } from './internal/onboarding/onboarding.module';
 import { AuthInternalModule } from './internal/auth/auth.module';
 import { StripeModule } from './internal/stripe/stripe.module';
@@ -78,6 +79,7 @@ import { StripeModule } from './internal/stripe/stripe.module';
     CompanyModule,
     UserModule,
     PlanModule,
+    SubscriptionModule,
     OnboardingModule,
     AuthInternalModule,
     StripeModule,
