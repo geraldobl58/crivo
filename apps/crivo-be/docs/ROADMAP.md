@@ -96,30 +96,18 @@ npm install stripe
 
 ---
 
-## Fase 3 — Assinaturas Read-Only
+## Fase 3 — Assinaturas Read-Only ✅
 
 **Localização:** `src/internal/subscriptions/`  
+**Status:** Implementado — ver [08-SUBSCRIPTIONS.md](08-SUBSCRIPTIONS.md)  
 **Dependência:** Fase 2 (dados preenchidos pelos webhooks)
 
-| Método | Endpoint                  | Descrição                          |
-| ------ | ------------------------- | ---------------------------------- |
-| `GET`  | `/subscriptions/me`       | Assinatura ativa + plano do tenant |
-| `GET`  | `/subscriptions/invoices` | Faturas do tenant (paginado)       |
+| Método | Endpoint                  | Auth   | Tenant | Descrição                          |
+| ------ | ------------------------- | ------ | ------ | ---------------------------------- |
+| `GET`  | `/subscriptions/me`       | ✅ JWT | ✅     | Assinatura ativa + plano do tenant |
+| `GET`  | `/subscriptions/invoices` | ✅ JWT | ✅     | Faturas do tenant (paginado)       |
 
-```typescript
-// Resposta GET /subscriptions/me
-{
-  "status": "ACTIVE",
-  "planType": "PROFESSIONAL",
-  "currentPeriodEnd": "2026-05-13T00:00:00.000Z",
-  "cancelAtPeriodEnd": false,
-  "plan": {
-    "type": "PROFESSIONAL",
-    "priceMonthly": 4990,
-    "maxUsers": 3
-  }
-}
-```
+Endpoints scoped ao tenant via `TenantInterceptor` + `@Tenant('companyId')`. Qualquer membro da empresa pode consultar (sem restrição de role).
 
 ---
 
