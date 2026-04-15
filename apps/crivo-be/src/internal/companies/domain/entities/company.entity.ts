@@ -78,4 +78,17 @@ export class CompanyEntity {
   set updatedAt(value: Date) {
     this._updatedAt = value;
   }
+
+  toJSON() {
+    return {
+      id: this._id,
+      name: this._name,
+      taxId: this._taxId,
+      stripeCustomerId: this._stripeCustomerId,
+      parentCompanyId: this._parentCompanyId,
+      subscription: this._subscription,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt,
+    };
+  }
 }
