@@ -5,7 +5,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
 import { Role } from '../../../domain/enums/user.role.enum';
 
@@ -50,12 +49,4 @@ export class CreateUserDto {
   @IsEnum(Role)
   @IsNotEmpty()
   role: Role;
-
-  @ApiProperty({
-    description: 'ID da empresa',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  companyId: string;
 }
