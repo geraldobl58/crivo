@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 
 import { USER_REPOSITORY } from '../../domain/repository/user.repository';
 import type { UserRepository } from '../../domain/repository/user.repository';
@@ -11,11 +16,17 @@ export class GetUserByIdUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(id: string): Promise<UserEntity> {
+  async execute(id: string, companyId?: string): Promise<UserEntity> {
     const user = await this.userRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
+    }
+
+    if (companyId && user.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Acesso negado: usuário não pertence à sua organização',
+      );
     }
 
     return user;
