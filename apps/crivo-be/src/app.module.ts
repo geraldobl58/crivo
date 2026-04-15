@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './libs/auth/jwt-auth.guard';
 import { TenantModule } from './libs/tenant/tenant.module';
 import { CompanyModule } from './internal/companies/company.module';
 import { UserModule } from './internal/users/user.module';
+import { PlanModule } from './internal/plans/plan.module';
 import { OnboardingModule } from './internal/onboarding/onboarding.module';
 import { AuthInternalModule } from './internal/auth/auth.module';
 import { StripeModule } from './internal/stripe/stripe.module';
@@ -76,6 +77,7 @@ import { StripeModule } from './internal/stripe/stripe.module';
     TenantModule,
     CompanyModule,
     UserModule,
+    PlanModule,
     OnboardingModule,
     AuthInternalModule,
     StripeModule,
