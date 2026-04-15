@@ -2,12 +2,16 @@ import { CompanyEntity } from '../entities/company.entity';
 
 export type CreateCompanyData = {
   name: string;
-  taxId: string;
+  taxId?: string;
+  parentCompanyId?: string;
 };
 
-export type UpdateCompanyData = Partial<CreateCompanyData>;
+export type UpdateCompanyData = Partial<
+  Omit<CreateCompanyData, 'parentCompanyId'>
+>;
 
 export type CompanyFilters = {
+  companyId?: string;
   name?: string;
   page?: number;
   limit?: number;
