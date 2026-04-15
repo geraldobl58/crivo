@@ -10,6 +10,8 @@ import { UpdateCompanyUseCase } from './application/use-cases/update-company.use
 import { DeleteCompanyUseCase } from './application/use-cases/delete-company.use-case';
 
 import { CompanyController } from './infrastructure/http/company.controller';
+import { PlanLimitGuard } from '../../libs/guards/plan-limit.guard';
+import { RolesGuard } from '../../libs/guards/roles.guard';
 
 @Module({
   controllers: [CompanyController],
@@ -23,6 +25,8 @@ import { CompanyController } from './infrastructure/http/company.controller';
     GetCompanyByIdUseCase,
     UpdateCompanyUseCase,
     DeleteCompanyUseCase,
+    PlanLimitGuard,
+    RolesGuard,
   ],
   exports: [COMPANY_REPOSITORY],
 })
