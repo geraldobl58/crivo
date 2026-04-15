@@ -22,7 +22,7 @@ export class PrismaUserRepository implements UserRepository {
     firstname: string | null;
     lastname: string | null;
     role: string;
-    companyId: string;
+    companyId: string | null;
     createdAt: Date;
     updatedAt: Date;
   }): UserEntity {
@@ -40,7 +40,7 @@ export class PrismaUserRepository implements UserRepository {
         firstname: data.firstname,
         lastname: data.lastname,
         role: data.role,
-        companyId: data.companyId,
+        ...(data.companyId !== undefined && { companyId: data.companyId }),
       },
     });
     return this.toEntity(user);
@@ -52,6 +52,9 @@ export class PrismaUserRepository implements UserRepository {
     const skip = (page - 1) * limit;
 
     const where = {
+      ...(filters.companyId && {
+        companyId: filters.companyId,
+      }),
       ...(filters.firstname && {
         firstname: {
           contains: filters.firstname,
