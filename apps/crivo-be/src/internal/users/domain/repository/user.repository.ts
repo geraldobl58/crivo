@@ -7,12 +7,13 @@ export type CreateUserData = {
   firstname?: string;
   lastname?: string;
   role: Role;
-  companyId: string;
+  companyId?: string;
 };
 
 export type UpdateUserData = Partial<CreateUserData>;
 
 export type UserFilters = {
+  companyId?: string;
   firstname?: string;
   email?: string;
   role?: Role;
