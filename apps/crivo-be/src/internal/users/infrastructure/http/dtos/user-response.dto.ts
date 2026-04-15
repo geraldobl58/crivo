@@ -41,11 +41,12 @@ export class UserResponseDto {
   })
   role: Role;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'ID da empresa à qual o usuário pertence',
     example: '550e8400-e29b-41d4-a716-446655440000',
+    nullable: true,
   })
-  companyId: string;
+  companyId: string | null;
 
   @ApiProperty({
     description: 'Data de criação',
