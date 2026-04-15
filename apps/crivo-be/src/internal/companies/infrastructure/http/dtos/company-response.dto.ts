@@ -1,5 +1,22 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+class SubscriptionInfoDto {
+  @ApiProperty({ description: 'Nome do plano', example: 'Basic' })
+  planName: string;
+
+  @ApiProperty({ description: 'Tipo do plano', example: 'BASIC' })
+  planType: string;
+
+  @ApiProperty({ description: 'Status da assinatura', example: 'ACTIVE' })
+  status: string;
+
+  @ApiProperty({
+    description: 'Fim do período atual',
+    example: '2026-05-14T00:00:00.000Z',
+  })
+  currentPeriodEnd: Date;
+}
+
 export class CompanyResponseDto {
   @ApiProperty({
     description: 'ID único da empresa (UUID)',
@@ -13,11 +30,12 @@ export class CompanyResponseDto {
   })
   name: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'CNPJ/CPF da empresa',
     example: '12.345.678/0001-90',
+    nullable: true,
   })
-  taxId: string;
+  taxId: string | null;
 
   @ApiPropertyOptional({
     description: 'ID do customer no Stripe',
@@ -25,6 +43,13 @@ export class CompanyResponseDto {
     nullable: true,
   })
   stripeCustomerId: string | null;
+
+  @ApiPropertyOptional({
+    description: 'ID da empresa pai (quando esta é uma sub-empresa/filial)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    nullable: true,
+  })
+  parentCompanyId: string | null;
 
   @ApiProperty({
     description: 'Data de criação',
@@ -37,6 +62,13 @@ export class CompanyResponseDto {
     example: '2026-04-12T00:00:00.000Z',
   })
   updatedAt: Date;
+
+  @ApiPropertyOptional({
+    description: 'Informações da assinatura vinculada (apenas empresa raiz)',
+    type: SubscriptionInfoDto,
+    nullable: true,
+  })
+  subscription: SubscriptionInfoDto | null;
 }
 
 export class PaginatedCompanyResponseDto {
