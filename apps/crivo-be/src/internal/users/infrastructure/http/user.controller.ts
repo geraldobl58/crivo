@@ -10,11 +10,15 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -22,6 +26,7 @@ import {
   ApiOperation,
   ApiTags,
   ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 
@@ -40,7 +45,16 @@ import {
 } from './dtos/user-response.dto';
 import { ErrorResponseDto } from '../../../../libs/http/dtos/error-response.dto';
 
+import { TenantInterceptor } from '../../../../libs/tenant/tenant.interceptor';
+import { Tenant } from '../../../../libs/tenant/tenant.decorator';
+import { PlanLimitGuard } from '../../../../libs/guards/plan-limit.guard';
+import { RolesGuard } from '../../../../libs/guards/roles.guard';
+import { Roles } from '../../../../libs/guards/roles.decorator';
+import { PlanResource } from '../../../../libs/guards/plan-resource.decorator';
+
 @ApiTags('Usuários')
+@ApiBearerAuth()
+@UseInterceptors(TenantInterceptor)
 @Controller('users')
 export class UserController {
   constructor(
@@ -52,13 +66,25 @@ export class UserController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Criar um novo usuário' })
+  @UseGuards(RolesGuard, PlanLimitGuard)
+  @Roles('ADMIN', 'OWNER', 'SUPPORT')
+  @PlanResource('users')
+  @ApiOperation({ summary: 'Criar um novo usuário na empresa' })
   @ApiCreatedResponse({
     description: 'Usuário criado com sucesso',
     type: UserResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Dados inválidos no corpo da requisição',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Permissão insuficiente (requer ADMIN, OWNER ou SUPPORT) ou limite de usuários do plano atingido',
     type: ErrorResponseDto,
   })
   @ApiConflictResponse({
@@ -77,18 +103,27 @@ export class UserController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async create(@Body() dto: CreateUserDto) {
-    return this.createUser.execute(dto);
+  async create(
+    @Body() dto: CreateUserDto,
+    @Tenant('companyId') companyId: string,
+  ) {
+    return this.createUser.execute({ ...dto, companyId });
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar usuários com filtros e paginação' })
+  @ApiOperation({
+    summary: 'Listar usuários da empresa com filtros e paginação',
+  })
   @ApiOkResponse({
     description: 'Lista paginada de usuários',
     type: PaginatedUserResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Parâmetros de consulta inválidos',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
     type: ErrorResponseDto,
   })
   @ApiTooManyRequestsResponse({
@@ -99,15 +134,26 @@ export class UserController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async findAll(@Query() query: GetUsersQueryDto) {
-    return this.getUsers.execute(query);
+  async findAll(
+    @Query() query: GetUsersQueryDto,
+    @Tenant('companyId') companyId: string,
+  ) {
+    return this.getUsers.execute({ ...query, companyId });
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Buscar usuário por ID' })
+  @ApiOperation({ summary: 'Buscar usuário por ID (dentro da empresa)' })
   @ApiOkResponse({ description: 'Usuário encontrado', type: UserResponseDto })
   @ApiBadRequestResponse({
     description: 'ID inválido (deve ser UUID)',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Usuário não pertence à sua organização',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -122,18 +168,29 @@ export class UserController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.getUserById.execute(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Tenant('companyId') companyId: string,
+  ) {
+    return this.getUserById.execute(id, companyId);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Atualizar usuário' })
+  @ApiOperation({ summary: 'Atualizar usuário da empresa' })
   @ApiOkResponse({
     description: 'Usuário atualizado com sucesso',
     type: UserResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Dados inválidos no corpo da requisição',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Usuário não pertence à sua organização',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -155,16 +212,25 @@ export class UserController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
+    @Tenant('companyId') companyId: string,
   ) {
-    return this.updateUser.execute(id, dto);
+    return this.updateUser.execute(id, dto, companyId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Remover usuário' })
+  @ApiOperation({ summary: 'Remover usuário da empresa' })
   @ApiNoContentResponse({ description: 'Usuário removido com sucesso' })
   @ApiBadRequestResponse({
     description: 'ID inválido (deve ser UUID)',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Usuário não pertence à sua organização',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -179,7 +245,10 @@ export class UserController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.deleteUser.execute(id);
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Tenant('companyId') companyId: string,
+  ) {
+    return this.deleteUser.execute(id, companyId);
   }
 }
