@@ -14,10 +14,10 @@ enum UserRole {
 }
 
 enum PlanType {
-  TRIAL // Período de teste gratuito - 1 dia de teste
-  BASIC // Plano básico, ideal para pequenas empresas ou uso individual - 1990 por mês
-  PROFESSIONAL // Plano profissional, ideal para empresas em crescimento - 4990 por mês
-  ENTERPRISE // Plano empresarial, ideal para grandes empresas - Entrar em contato para preço personalizado
+  TRIAL // Período de teste gratuito - 1 dia de teste / 1 cadastro permitido de company e usuário
+  BASIC // Plano básico, ideal para pequenas empresas ou uso individual - 1990 por mês / 1 cadastro permitido de company e usuário
+  PROFESSIONAL // Plano profissional, ideal para empresas em crescimento - 4990 por mês / até 3 cadastros permitidos de company e usuário
+  ENTERPRISE // Plano empresarial, ideal para grandes empresas - Entrar em contato para preço personalizado / cadastros ilimitados de company e usuário
 }
 
 enum SubscriptionStatus {
@@ -38,17 +38,26 @@ enum InvoiceStatus {
   UNCOLLECTIBLE // Não cobrável
 }
 
+enum AccountType {
+  ASSET     // Ativo
+  LIABILITY // Passivo
+  EQUITY    // Patrimônio Líquido
+  REVENUE   // Receita
+  EXPENSE   // Despesa
+}
+
 model User {
-  id         String  @id @default(uuid())
-  keycloakId String  @unique
-  email      String  @unique
-  firstname  String?
-  lastname   String?
-  role       UserRole @default(USER)
+  id              String    @id @default(uuid())
+  keycloakId      String    @unique
+  email           String    @unique
+  firstname       String?
+  lastname        String?
+  role            UserRole  @default(USER)
+  pendingPlanType PlanType? // Plano escolhido no onboarding, usado no complete
 
   // Relação com a Empresa (Multi-tenancy)
-  companyId  String
-  company    Company @relation(fields: [companyId], references: [id])
+  companyId  String?
+  company    Company? @relation(fields: [companyId], references: [id])
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -58,12 +67,17 @@ model User {
 }
 
 model Company {
-  id    String @id @default(uuid())
-  name  String @unique
-  taxId String @unique // CNPJ/CPF
+  id    String  @id @default(uuid())
+  name  String
+  taxId String? @unique // CNPJ/CPF (opcional no cadastro inicial, preenchido depois)
 
   // Stripe
   stripeCustomerId String? @unique // ID do customer no Stripe
+
+  // Sub-empresas: hierarquia de empresas filhas (para controle de maxCompany por plano)
+  parentCompanyId String?
+  parentCompany   Company?  @relation("CompanyChildren", fields: [parentCompanyId], references: [id])
+  childCompanies  Company[] @relation("CompanyChildren")
 
   // Relação com Usuários
   users User[]
@@ -71,8 +85,13 @@ model Company {
   // Relação com Assinatura (Uma empresa tem uma assinatura ativa)
   subscription Subscription?
 
+  // Plano de Contas
+  chartOfAccounts ChartOfAccount[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([parentCompanyId])
 }
 
 model Plan {
@@ -175,4 +194,27 @@ model Invoice {
 
   @@index([subscriptionId])
   @@index([status])
+}
+
+model ChartOfAccount {
+  id   String      @id @default(uuid())
+  code String
+  name String
+  type AccountType
+
+  // Multi-tenancy
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  // Hierarquia (conta pai/filhas)
+  parentId String?
+  parent   ChartOfAccount?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children ChartOfAccount[] @relation("AccountHierarchy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([code, companyId])
+  @@index([companyId])
+  @@index([type])
 }
