@@ -88,4 +88,18 @@ export class UserEntity {
   set updatedAt(value: Date) {
     this._updatedAt = value;
   }
+
+  toJSON() {
+    return {
+      id: this._id,
+      keycloakId: this._keycloakId,
+      email: this._email,
+      firstname: this._firstname,
+      lastname: this._lastname,
+      role: this._role,
+      companyId: this._companyId,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt,
+    };
+  }
 }
