@@ -10,6 +10,8 @@ import { UpdateUserUseCase } from './application/use-cases/update-user.use-case'
 import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case';
 
 import { UserController } from './infrastructure/http/user.controller';
+import { PlanLimitGuard } from '../../libs/guards/plan-limit.guard';
+import { RolesGuard } from '../../libs/guards/roles.guard';
 
 @Module({
   controllers: [UserController],
@@ -23,6 +25,8 @@ import { UserController } from './infrastructure/http/user.controller';
     GetUserByIdUseCase,
     UpdateUserUseCase,
     DeleteUserUseCase,
+    PlanLimitGuard,
+    RolesGuard,
   ],
   exports: [USER_REPOSITORY],
 })
