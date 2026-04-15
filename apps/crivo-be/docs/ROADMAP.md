@@ -4,9 +4,10 @@ Este documento descreve as funcionalidades que precisam ser implementadas para c
 
 ---
 
-## Fase 1 — Planos (Pré-requisito para Stripe)
+## Fase 1 — Planos (Pré-requisito para Stripe) ✅
 
-**Localização:** `src/internal/plans/`
+**Localização:** `src/internal/plans/`  
+**Status:** Implementado — ver [07-PLANS.md](07-PLANS.md)
 
 Expõe os planos cadastrados no banco (populados pelo seed) para o frontend montar a pricing page.
 
@@ -204,9 +205,9 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 ## Prioridade Sugerida
 
 ```
-[P1] Fase 1 — Plans CRUD          (1 dia)       ← PRÓXIMO PASSO
+[✅] Fase 1 — Plans CRUD           (concluído)
 [✅] Fase 2 — Stripe Checkout/Webhook (concluído)
-[P2] Fase 3 — Subscriptions read  (0.5 dia)
+[P1] Fase 3 — Subscriptions read  (0.5 dia)  ← PRÓXIMO PASSO
 [P2] Fase 4 — Keycloak Admin      (1-2 dias)
 [P3] Fase 5 — Customer Portal     (0.5 dia)
 [P3] Fase 6 — Email               (1-2 dias)
@@ -234,6 +235,6 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 | Stripe Checkout           | ✅     | Onboarding + upgrade de plano                         |
 | Stripe Webhooks           | ✅     | 5 event types, compatível com API dahlia              |
 | Onboarding completo       | ✅     | Transação atômica + Stripe Customer + Checkout        |
-| Plans CRUD                | ⏳     | Fase 1 — **PRÓXIMO PASSO**                            |
-| Subscriptions API         | ⏳     | Fase 3                                                |
+| Plans CRUD                | ✅     | `GET /plans` (público) + `POST/PATCH` (admin)         |
+| Subscriptions API         | ⏳     | Fase 3 — **PRÓXIMO PASSO**                            |
 | Keycloak Admin            | ⏳     | Fase 4                                                |

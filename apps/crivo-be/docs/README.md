@@ -71,3 +71,4 @@ npm run start:dev
 | [04-USER-JOURNEY.md](./04-USER-JOURNEY.md) | Fluxo completo: onboarding → autenticação → uso         |
 | [05-TESTING.md](./05-TESTING.md)           | Testes manuais: guards, limites de plano, tenant        |
 | [06-STRIPE.md](./06-STRIPE.md)             | Configuração do Stripe: produtos, prices, webhooks      |
+| [07-PLANS.md](./07-PLANS.md)               | Plans CRUD: endpoints, modelo, decisões de design       |
