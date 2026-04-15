@@ -15,18 +15,46 @@ export class PrismaCompanyRepository implements CompanyRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   private toEntity(record: Record<string, unknown>): CompanyEntity {
+    const subscription = record.subscription as
+      | {
+          status: string;
+          currentPeriodEnd: Date;
+          plan?: { name: string; type: string };
+        }
+      | null
+      | undefined;
+
     return new CompanyEntity({
       id: record.id as string,
       name: record.name as string,
-      taxId: record.taxId as string,
+      taxId: (record.taxId as string) ?? null,
       stripeCustomerId: (record.stripeCustomerId as string) ?? null,
+      parentCompanyId: (record.parentCompanyId as string) ?? null,
+      subscription: subscription?.plan
+        ? {
+            planName: subscription.plan.name,
+            planType: subscription.plan.type,
+            status: subscription.status,
+            currentPeriodEnd: subscription.currentPeriodEnd,
+          }
+        : null,
       createdAt: record.createdAt as Date,
       updatedAt: record.updatedAt as Date,
     });
   }
 
+  private readonly includeSubscription = {
+    subscription: { include: { plan: true } },
+  };
+
   async create(data: CreateCompanyData): Promise<CompanyEntity> {
-    const company = await this.prisma.company.create({ data });
+    const company = await this.prisma.company.create({
+      data: {
+        name: data.name,
+        ...(data.taxId && { taxId: data.taxId }),
+        ...(data.parentCompanyId && { parentCompanyId: data.parentCompanyId }),
+      },
+    });
     return this.toEntity(company);
   }
 
@@ -38,6 +66,9 @@ export class PrismaCompanyRepository implements CompanyRepository {
     const skip = (page - 1) * limit;
 
     const where = {
+      ...(filters.companyId && {
+        OR: [{ id: filters.companyId }, { parentCompanyId: filters.companyId }],
+      }),
       ...(filters.name && {
         name: { contains: filters.name, mode: 'insensitive' as const },
       }),
@@ -49,6 +80,7 @@ export class PrismaCompanyRepository implements CompanyRepository {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: this.includeSubscription,
       }),
       this.prisma.company.count({ where }),
     ]);
@@ -63,11 +95,15 @@ export class PrismaCompanyRepository implements CompanyRepository {
   }
 
   async findById(id: string): Promise<CompanyEntity | null> {
-    const company = await this.prisma.company.findUnique({ where: { id } });
+    const company = await this.prisma.company.findUnique({
+      where: { id },
+      include: this.includeSubscription,
+    });
     return company ? this.toEntity(company) : null;
   }
 
   async findByTaxId(taxId: string): Promise<CompanyEntity | null> {
+    if (!taxId) return null;
     const company = await this.prisma.company.findUnique({ where: { taxId } });
     return company ? this.toEntity(company) : null;
   }
