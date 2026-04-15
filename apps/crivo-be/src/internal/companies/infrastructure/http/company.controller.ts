@@ -10,11 +10,15 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -22,6 +26,7 @@ import {
   ApiOperation,
   ApiTags,
   ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 
@@ -40,7 +45,16 @@ import {
 } from './dtos/company-response.dto';
 import { ErrorResponseDto } from '../../../../libs/http/dtos/error-response.dto';
 
+import { TenantInterceptor } from '../../../../libs/tenant/tenant.interceptor';
+import { Tenant } from '../../../../libs/tenant/tenant.decorator';
+import { PlanLimitGuard } from '../../../../libs/guards/plan-limit.guard';
+import { RolesGuard } from '../../../../libs/guards/roles.guard';
+import { Roles } from '../../../../libs/guards/roles.decorator';
+import { PlanResource } from '../../../../libs/guards/plan-resource.decorator';
+
 @ApiTags('Empresas')
+@ApiBearerAuth()
+@UseInterceptors(TenantInterceptor)
 @Controller('companies')
 export class CompanyController {
   constructor(
@@ -52,6 +66,9 @@ export class CompanyController {
   ) {}
 
   @Post()
+  @UseGuards(RolesGuard, PlanLimitGuard)
+  @Roles('ADMIN', 'OWNER', 'SUPPORT')
+  @PlanResource('company')
   @ApiOperation({ summary: 'Criar uma nova empresa' })
   @ApiCreatedResponse({
     description: 'Empresa criada com sucesso',
@@ -59,6 +76,15 @@ export class CompanyController {
   })
   @ApiBadRequestResponse({
     description: 'Dados inválidos no corpo da requisição',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Permissão insuficiente (requer ADMIN, OWNER ou SUPPORT) ou assinatura inativa',
     type: ErrorResponseDto,
   })
   @ApiConflictResponse({
@@ -77,8 +103,11 @@ export class CompanyController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async create(@Body() dto: CreateCompanyDto) {
-    return this.createCompany.execute(dto);
+  async create(
+    @Body() dto: CreateCompanyDto,
+    @Tenant('companyId') parentCompanyId: string,
+  ) {
+    return this.createCompany.execute({ ...dto, parentCompanyId });
   }
 
   @Get()
@@ -91,6 +120,10 @@ export class CompanyController {
     description: 'Parâmetros de consulta inválidos',
     type: ErrorResponseDto,
   })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
   @ApiTooManyRequestsResponse({
     description: 'Limite de requisições excedido',
     type: ErrorResponseDto,
@@ -99,8 +132,11 @@ export class CompanyController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async findAll(@Query() query: GetCompaniesQueryDto) {
-    return this.getCompanies.execute(query);
+  async findAll(
+    @Query() query: GetCompaniesQueryDto,
+    @Tenant('companyId') companyId: string,
+  ) {
+    return this.getCompanies.execute({ ...query, companyId });
   }
 
   @Get(':id')
@@ -111,6 +147,10 @@ export class CompanyController {
   })
   @ApiBadRequestResponse({
     description: 'ID inválido (deve ser UUID)',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -125,11 +165,16 @@ export class CompanyController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.getCompanyById.execute(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Tenant('companyId') companyId: string,
+  ) {
+    return this.getCompanyById.execute(id, companyId);
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'OWNER', 'SUPPORT')
   @ApiOperation({ summary: 'Atualizar empresa' })
   @ApiOkResponse({
     description: 'Empresa atualizada com sucesso',
@@ -137,6 +182,14 @@ export class CompanyController {
   })
   @ApiBadRequestResponse({
     description: 'Dados inválidos no corpo da requisição',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Permissão insuficiente (requer ADMIN, OWNER ou SUPPORT)',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -158,16 +211,27 @@ export class CompanyController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCompanyDto,
+    @Tenant('companyId') companyId: string,
   ) {
-    return this.updateCompany.execute(id, dto);
+    return this.updateCompany.execute(id, dto, companyId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'OWNER', 'SUPPORT')
   @ApiOperation({ summary: 'Remover empresa' })
   @ApiNoContentResponse({ description: 'Empresa removida com sucesso' })
   @ApiBadRequestResponse({
     description: 'ID inválido (deve ser UUID)',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Permissão insuficiente (requer ADMIN, OWNER ou SUPPORT)',
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -182,7 +246,10 @@ export class CompanyController {
     description: 'Erro interno do servidor',
     type: ErrorResponseDto,
   })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.deleteCompany.execute(id);
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Tenant('companyId') companyId: string,
+  ) {
+    return this.deleteCompany.execute(id, companyId);
   }
 }
