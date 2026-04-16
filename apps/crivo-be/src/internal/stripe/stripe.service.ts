@@ -85,6 +85,18 @@ export class StripeService implements OnModuleInit {
     return this.stripeClient.subscriptions.retrieve(subscriptionId);
   }
 
+  async createBillingPortalSession(params: {
+    customerId: string;
+    returnUrl: string;
+  }): Promise<{ url: string }> {
+    const session = await this.stripeClient.billingPortal.sessions.create({
+      customer: params.customerId,
+      return_url: params.returnUrl,
+    });
+
+    return { url: session.url };
+  }
+
   async deleteCustomer(customerId: string): Promise<any> {
     return this.stripeClient.customers.del(customerId);
   }

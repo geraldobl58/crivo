@@ -20,9 +20,11 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { CreateCheckoutSessionUseCase } from '../../application/use-cases/create-checkout-session.use-case';
+import { CreatePortalSessionUseCase } from '../../application/use-cases/create-portal-session.use-case';
 import { HandleStripeWebhookUseCase } from '../../application/use-cases/handle-stripe-webhook.use-case';
 import { CreateCheckoutSessionDto } from './dtos/create-checkout-session.dto';
 import { CheckoutSessionResponseDto } from './dtos/checkout-session-response.dto';
+import { PortalSessionResponseDto } from './dtos/portal-session-response.dto';
 import { ErrorResponseDto } from '../../../../libs/http/dtos/error-response.dto';
 import { Public } from '../../../../libs/auth/public.decorator';
 import { TenantInterceptor } from '../../../../libs/tenant/tenant.interceptor';
@@ -34,6 +36,7 @@ import type { TenantContext } from '../../../../libs/tenant/tenant.context';
 export class StripeController {
   constructor(
     private readonly createCheckoutSessionUseCase: CreateCheckoutSessionUseCase,
+    private readonly createPortalSessionUseCase: CreatePortalSessionUseCase,
     private readonly handleStripeWebhookUseCase: HandleStripeWebhookUseCase,
   ) {}
 
@@ -71,6 +74,40 @@ export class StripeController {
       keycloakId: tenant.keycloakId,
       companyId: tenant.companyId,
       planType: dto.planType,
+    });
+  }
+
+  @Post('portal')
+  @UseInterceptors(TenantInterceptor)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Criar sessão do Customer Portal do Stripe',
+    description:
+      'Gera uma URL do Stripe Customer Portal onde o usuário pode gerenciar ' +
+      'assinatura, método de pagamento, cancelamento e faturas.',
+  })
+  @ApiCreatedResponse({
+    description: 'URL do portal criada com sucesso',
+    type: PortalSessionResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Empresa sem assinatura ativa',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token de autenticação inválido ou ausente',
+    type: ErrorResponseDto,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno do servidor',
+    type: ErrorResponseDto,
+  })
+  async portal(
+    @Tenant() tenant: TenantContext,
+  ): Promise<PortalSessionResponseDto> {
+    return this.createPortalSessionUseCase.execute({
+      companyId: tenant.companyId,
     });
   }
 
