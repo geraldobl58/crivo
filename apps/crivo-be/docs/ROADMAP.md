@@ -111,32 +111,25 @@ Endpoints scoped ao tenant via `TenantInterceptor` + `@Tenant('companyId')`. Qua
 
 ---
 
-## Fase 4 — Keycloak Admin Service
+## Fase 4 — Keycloak Admin Service ✅
 
-**Localização:** `src/libs/keycloak/keycloak-admin.service.ts`
+**Localização:** `src/libs/keycloak/`  
+**Status:** Implementado — ver [09-KEYCLOAK-ADMIN.md](09-KEYCLOAK-ADMIN.md)
 
-Permite ao backend criar e gerenciar usuários no Keycloak programaticamente (sem depender de cadastro manual).
+Serviço `@Global()` que encapsula a Keycloak Admin REST API via Client Credentials Grant. Token cacheado em memória com margem de 30s.
 
-### Operações necessárias
+### Operações implementadas
 
-| Método | Endpoint Keycloak Admin API                         | Uso                         |
-| ------ | --------------------------------------------------- | --------------------------- |
-| POST   | `/admin/realms/crivo/users`                         | Criar usuário no onboarding |
-| PUT    | `/admin/realms/crivo/users/:id`                     | Atualizar email / nome      |
-| POST   | `/admin/realms/crivo/users/:id/role-mappings/realm` | Atribuir role (owner, user) |
-| PUT    | `/admin/realms/crivo/users/:id/reset-password`      | Forçar troca de senha       |
+| Método              | Keycloak Admin API                                       | Descrição             |
+| ------------------- | -------------------------------------------------------- | --------------------- |
+| `createUser()`      | `POST /admin/realms/crivo/users`                         | Criar usuário         |
+| `updateUser()`      | `PUT /admin/realms/crivo/users/:id`                      | Atualizar email/nome  |
+| `assignRealmRole()` | `POST /admin/realms/crivo/users/:id/role-mappings/realm` | Atribuir role         |
+| `resetPassword()`   | `PUT /admin/realms/crivo/users/:id/reset-password`       | Forçar troca de senha |
+| `deleteUser()`      | `DELETE /admin/realms/crivo/users/:id`                   | Remover usuário       |
+| `findUserByEmail()` | `GET /admin/realms/crivo/users?email=...&exact=true`     | Buscar por email      |
 
-### Autenticação (Client Credentials)
-
-```typescript
-// Troca client_id + client_secret por access_token
-POST /realms/crivo/protocol/openid-connect/token
-grant_type=client_credentials
-client_id=crivo-api
-client_secret=<KEYCLOAK_CLIENT_SECRET>
-```
-
-### Env vars necessárias
+### Env vars
 
 Já configuradas no `.env`: `KEYCLOAK_BASE_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`.
 
@@ -193,36 +186,36 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 ## Prioridade Sugerida
 
 ```
-[✅] Fase 1 — Plans CRUD           (concluído)
+[✅] Fase 1 — Plans CRUD              (concluído)
 [✅] Fase 2 — Stripe Checkout/Webhook (concluído)
-[P1] Fase 3 — Subscriptions read  (0.5 dia)  ← PRÓXIMO PASSO
-[P2] Fase 4 — Keycloak Admin      (1-2 dias)
-[P3] Fase 5 — Customer Portal     (0.5 dia)
-[P3] Fase 6 — Email               (1-2 dias)
-[P4] Fase 7 — Admin Dashboard     (2-3 dias)
+[✅] Fase 3 — Subscriptions read      (concluído)
+[✅] Fase 4 — Keycloak Admin          (concluído)
+[P1] Fase 5 — Customer Portal         ← PRÓXIMO PASSO
+[P2] Fase 6 — Email
+[P3] Fase 7 — Admin Dashboard
 ```
 
 ---
 
 ## Estado Atual (Implementado)
 
-| Módulo                    | Status | Notas                                                 |
-| ------------------------- | ------ | ----------------------------------------------------- |
-| Infraestrutura            | ✅     | PostgreSQL + Keycloak + Docker                        |
-| Onboarding                | ✅     | Transação atômica + 55 contas contábeis               |
-| JWT Guard (Keycloak)      | ✅     | JWKS RS256, @Public() decorator                       |
-| Multi-tenancy             | ✅     | Shared schema, isolamento comprovado                  |
-| CRUD Companies            | ✅     | Tenant-isolated, ownership checks                     |
-| CRUD Users                | ✅     | Tenant-isolated, ownership checks                     |
-| RolesGuard                | ✅     | `@Roles()` — OWNER/ADMIN/SUPPORT em escritas          |
-| PlanLimitGuard maxUsers   | ✅     | Bloqueia criação de usuários acima do limite do plano |
-| PlanLimitGuard maxCompany | ✅     | Bloqueia criação de sub-empresas acima do limite      |
-| Hierarquia de empresas    | ✅     | `parentCompanyId` — migração aplicada                 |
-| Seed (4 planos)           | ✅     | `npm run prisma:seed`                                 |
-| Auth dev-token            | ✅     | `POST /auth/dev-token` (dev only)                     |
-| Stripe Checkout           | ✅     | Onboarding + upgrade de plano                         |
-| Stripe Webhooks           | ✅     | 5 event types, compatível com API dahlia              |
-| Onboarding completo       | ✅     | Transação atômica + Stripe Customer + Checkout        |
-| Plans CRUD                | ✅     | `GET /plans` (público) + `POST/PATCH` (admin)         |
-| Subscriptions API         | ⏳     | Fase 3 — **PRÓXIMO PASSO**                            |
-| Keycloak Admin            | ⏳     | Fase 4                                                |
+| Módulo                    | Status | Notas                                                   |
+| ------------------------- | ------ | ------------------------------------------------------- |
+| Infraestrutura            | ✅     | PostgreSQL + Keycloak + Docker                          |
+| Onboarding                | ✅     | Transação atômica + 55 contas contábeis                 |
+| JWT Guard (Keycloak)      | ✅     | JWKS RS256, @Public() decorator                         |
+| Multi-tenancy             | ✅     | Shared schema, isolamento comprovado                    |
+| CRUD Companies            | ✅     | Tenant-isolated, ownership checks                       |
+| CRUD Users                | ✅     | Tenant-isolated, ownership checks                       |
+| RolesGuard                | ✅     | `@Roles()` — OWNER/ADMIN/SUPPORT em escritas            |
+| PlanLimitGuard maxUsers   | ✅     | Bloqueia criação de usuários acima do limite do plano   |
+| PlanLimitGuard maxCompany | ✅     | Bloqueia criação de sub-empresas acima do limite        |
+| Hierarquia de empresas    | ✅     | `parentCompanyId` — migração aplicada                   |
+| Seed (4 planos)           | ✅     | `npm run prisma:seed`                                   |
+| Auth dev-token            | ✅     | `POST /auth/dev-token` (dev only)                       |
+| Stripe Checkout           | ✅     | Onboarding + upgrade de plano                           |
+| Stripe Webhooks           | ✅     | 5 event types, compatível com API dahlia                |
+| Onboarding completo       | ✅     | Transação atômica + Stripe Customer + Checkout          |
+| Plans CRUD                | ✅     | `GET /plans` (público) + `POST/PATCH` (admin)           |
+| Subscriptions API         | ✅     | `GET /subscriptions/me` + `GET /subscriptions/invoices` |
+| Keycloak Admin Service    | ✅     | Client Credentials, CRUD users, assign roles            |
