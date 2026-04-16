@@ -20,17 +20,21 @@ async function main() {
 
   console.log('🧹 Cleaning existing data...\n');
 
-  // Limpa self-referential FK antes de deletar companies
-  await prisma.company.updateMany({ data: { parentCompanyId: null } });
+  try {
+    // Limpa self-referential FK antes de deletar companies
+    await prisma.company.updateMany({ data: { parentCompanyId: null } });
 
-  // Deleta na ordem correta (filhos antes de pais)
-  await prisma.chartOfAccount.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.company.deleteMany();
-  await prisma.plan.deleteMany();
+    // Deleta na ordem correta (filhos antes de pais)
+    await prisma.chartOfAccount.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.subscription.deleteMany();
+    await prisma.company.deleteMany();
+    await prisma.plan.deleteMany();
 
-  console.log('  ✅ All data cleared\n');
+    console.log('  ✅ All data cleared\n');
+  } catch {
+    console.log('  ⚠️  Tables not found — skipping cleanup (first run?)\n');
+  }
   console.log('🌱 Seeding database...\n');
 
   // ───────────────────────────────────────────

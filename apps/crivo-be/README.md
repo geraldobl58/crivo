@@ -14,6 +14,7 @@ API multi-tenant SaaS para gestão contábil com autenticação via Keycloak, pa
 | Autenticação     | Keycloak 26 — OpenID Connect (JWT RS256 via JWKS) |
 | Pagamentos       | Stripe (subscriptions + webhooks + portal)        |
 | Email            | Nodemailer (Mailtrap em dev)                      |
+| API Gateway      | Kong 3.9 (DB-less / declarativo)                  |
 | Logs             | Pino (pino-pretty em dev)                         |
 | Documentação API | Swagger (OpenAPI) em `/docs`                      |
 | Infraestrutura   | Docker Compose                                    |
@@ -350,17 +351,44 @@ npm run start:prod         # Rodar build de produção
 ## Infraestrutura (Docker)
 
 ```bash
-docker compose up -d       # PostgreSQL + Keycloak
+docker compose up -d       # PostgreSQL + Keycloak + Kong
 docker compose down        # Parar tudo
 docker compose logs -f     # Seguir logs
 ```
 
-| Serviço    | Container            | Porta | Credenciais            |
-| ---------- | -------------------- | ----- | ---------------------- |
-| PostgreSQL | `crivo-postgres-dev` | 5432  | crivo / crivo_password |
-| Keycloak   | `crivo-auth-dev`     | 8080  | admin / admin          |
+| Serviço    | Container            | Porta       | Credenciais / Descrição        |
+| ---------- | -------------------- | ----------- | ------------------------------ |
+| PostgreSQL | `crivo-postgres-dev` | 5432        | crivo / crivo_password         |
+| Keycloak   | `crivo-auth-dev`     | 8080        | admin / admin                  |
+| Kong Proxy | `crivo-kong-dev`     | 8000 / 8443 | Gateway (frontend aponta aqui) |
+| Kong Admin | `crivo-kong-dev`     | 8001        | API de gerenciamento (dev)     |
+| Konga UI   | `crivo-konga-dev`    | 1337        | Admin visual do Kong           |
 
 O Keycloak usa o mesmo PostgreSQL (database `crivo_keycloak`). O `init-databases.sh` cria ambos os databases automaticamente.
+
+### Kong API Gateway
+
+O Kong roda em modo **DB-less** (sem banco próprio). Config em `kong/kong.yml`.
+
+```
+Frontend / Apps  ──→  Kong :8000  ─┬─→  /api/*   ─→  NestJS :3333
+                                   ├─→  /docs    ─→  NestJS :3333
+                                   └─→  /auth/*  ─→  Keycloak :8080
+```
+
+**Plugins ativos:** rate limiting (120/min API, 30/min auth), CORS, bot detection, security headers, correlation ID, request size limit.
+
+```bash
+# Testar via Kong
+curl http://localhost:8000/api/plans
+curl http://localhost:8000/api/health
+
+# Admin API
+curl http://localhost:8001/status | jq
+
+# Konga UI (admin visual)
+open http://localhost:1337
+```
 
 ---
 
@@ -408,11 +436,13 @@ Enums principais: `UserRole`, `PlanType`, `SubscriptionStatus`, `InvoiceStatus`
 ## Segurança
 
 - **JWT RS256** — Tokens assinados pelo Keycloak, validados via JWKS
-- **Rate Limiting** — 100 req/min (global via `@nestjs/throttler`)
+- **API Gateway** — Kong: rate limiting, bot detection, security headers
+- **Rate Limiting** — Kong (120/min) + NestJS throttler (100/min) = dupla camada
 - **Webhook Verification** — `stripe.webhooks.constructEvent()` valida assinatura
 - **Input Validation** — `class-validator` global com `whitelist: true`
 - **Tenant Isolation** — Queries filtradas por `companyId` automaticamente
-- **CORS** — Configurado para `FRONTEND_URL`
+- **CORS** — Centralizado no Kong + fallback no NestJS
+- **Security Headers** — X-Frame-Options, X-Content-Type-Options, etc. (via Kong)
 - **Raw Body** — Preservado apenas para `/stripe/webhook`
 
 ---
@@ -433,4 +463,5 @@ Enums principais: `UserRole`, `PlanType`, `SubscriptionStatus`, `InvoiceStatus`
 | [10-CUSTOMER-PORTAL.md](docs/10-CUSTOMER-PORTAL.md) | Stripe Customer Portal                     |
 | [11-MAIL.md](docs/11-MAIL.md)                       | Email transacional, templates, Mailtrap    |
 | [12-ADMIN-DASHBOARD.md](docs/12-ADMIN-DASHBOARD.md) | Admin Dashboard, métricas, impersonação    |
+| [13-API-GATEWAY.md](docs/13-API-GATEWAY.md)         | Kong API Gateway, rotas, plugins           |
 | [ROADMAP.md](docs/ROADMAP.md)                       | Roadmap com todas as fases e status        |

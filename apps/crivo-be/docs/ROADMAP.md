@@ -192,6 +192,35 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 
 ---
 
+## Fase 8 — API Gateway (Kong) ✅
+
+**Localização:** `kong/kong.yml` (raiz do monorepo)  
+**Status:** Implementado — ver [13-API-GATEWAY.md](13-API-GATEWAY.md)
+
+Kong em modo DB-less (declarativo) como gateway centralizado.
+
+| Recurso     | Via Kong                       |
+| ----------- | ------------------------------ |
+| API Backend | `http://localhost:8000/api/*`  |
+| Swagger     | `http://localhost:8000/docs`   |
+| Keycloak    | `http://localhost:8000/auth/*` |
+| Kong Admin  | `http://localhost:8001`        |
+
+### Plugins ativos
+
+| Plugin                | Escopo   | Configuração                  |
+| --------------------- | -------- | ----------------------------- |
+| rate-limiting         | API      | 120 req/min por IP            |
+| rate-limiting         | Keycloak | 30 req/min (anti brute-force) |
+| cors                  | API      | Centralizado no gateway       |
+| request-size-limiting | API      | 50 MB                         |
+| correlation-id        | API      | X-Request-Id (uuid#counter)   |
+| bot-detection         | Global   | Bloqueia scrapers conhecidos  |
+| response-transformer  | Global   | Security headers (OWASP)      |
+| file-log              | API      | stdout (dev only)             |
+
+---
+
 ## Prioridade Sugerida
 
 ```
@@ -202,6 +231,7 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 [✅] Fase 5 — Customer Portal         (concluído)
 [✅] Fase 6 — Email                   (concluído)
 [✅] Fase 7 — Admin Dashboard         (concluído)
+[✅] Fase 8 — Kong API Gateway        (concluído)
 ```
 
 **Todas as fases do backend concluídas!** 🎉
@@ -233,3 +263,4 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 | Customer Portal           | ✅     | `POST /stripe/portal` → Stripe hosted portal            |
 | Email Transacional        | ✅     | Mailtrap SMTP, 5 templates, best-effort sends           |
 | Admin Dashboard           | ✅     | Métricas, listagem cross-tenant, impersonação           |
+| Kong API Gateway          | ✅     | DB-less, rate limiting, CORS, security headers          |

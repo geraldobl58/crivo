@@ -16,9 +16,15 @@ async function bootstrap() {
   app.useLogger(logger);
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'http://localhost:8000', // Kong proxy
+    ],
     credentials: true,
   });
+
+  // Trust Kong proxy headers (X-Forwarded-For, X-Real-IP)
+  app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
 
   app.use(
     express.json({
@@ -32,10 +38,21 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
+  // Health check for Kong / load balancers
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get(
+    '/health',
+    (_req: unknown, res: { json: (body: unknown) => void }) => {
+      res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    },
+  );
+
   const config = new DocumentBuilder()
     .setTitle('Crivo API')
     .setDescription('Documentação da API do Crivo')
     .setVersion('1.0')
+    .addServer('http://localhost:8000/api', 'Kong Gateway')
+    .addServer(`http://localhost:${process.env.PORT ?? 3333}`, 'Direct (dev)')
     .addBearerAuth()
     .build();
 
