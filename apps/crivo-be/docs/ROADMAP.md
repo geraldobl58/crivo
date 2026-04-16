@@ -159,9 +159,10 @@ Permite ao usuário gerenciar a assinatura pelo Stripe diretamente, sem passar p
 
 ---
 
-## Fase 6 — Módulo de Notificações (Email Transacional)
+## Fase 6 — Módulo de Notificações (Email Transacional) ✅
 
-**Localização:** `src/libs/mail/`
+**Localização:** `src/libs/mail/`  
+**Status:** Implementado — ver [11-MAIL.md](11-MAIL.md)
 
 | Trigger                | Email enviado                            |
 | ---------------------- | ---------------------------------------- |
@@ -171,7 +172,7 @@ Permite ao usuário gerenciar a assinatura pelo Stripe diretamente, sem passar p
 | Pagamento falhou       | Notificação + link para atualizar cartão |
 | Subscription cancelada | Confirmação de cancelamento              |
 
-Provedores: **Resend** ou **SendGrid** (via `@nestjs-modules/mailer` + Handlebars templates).
+Provider: **nodemailer** (SMTP) com Mailtrap em dev. Templates HTML inline (`src/libs/mail/templates/`).
 
 ---
 
@@ -196,8 +197,8 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 [✅] Fase 3 — Subscriptions read      (concluído)
 [✅] Fase 4 — Keycloak Admin          (concluído)
 [✅] Fase 5 — Customer Portal         (concluído)
-[P1] Fase 6 — Email                    ← PRÓXIMO PASSO
-[P2] Fase 7 — Admin Dashboard
+[✅] Fase 6 — Email                   (concluído)
+[P1] Fase 7 — Admin Dashboard         ← PRÓXIMO PASSO
 ```
 
 ---
@@ -225,3 +226,4 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 | Subscriptions API         | ✅     | `GET /subscriptions/me` + `GET /subscriptions/invoices` |
 | Keycloak Admin Service    | ✅     | Client Credentials, CRUD users, assign roles            |
 | Customer Portal           | ✅     | `POST /stripe/portal` → Stripe hosted portal            |
+| Email Transacional        | ✅     | Mailtrap SMTP, 5 templates, best-effort sends           |

@@ -75,3 +75,4 @@ npm run start:dev
 | [08-SUBSCRIPTIONS.md](./08-SUBSCRIPTIONS.md)     | Subscriptions API: assinatura do tenant, faturas        |
 | [09-KEYCLOAK-ADMIN.md](./09-KEYCLOAK-ADMIN.md)   | Keycloak Admin Service: CRUD de usuários, roles         |
 | [10-CUSTOMER-PORTAL.md](./10-CUSTOMER-PORTAL.md) | Customer Portal: gerenciamento de assinatura via Stripe |
+| [11-MAIL.md](./11-MAIL.md)                       | Email transacional: templates, Mailtrap, integração     |
