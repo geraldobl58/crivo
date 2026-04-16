@@ -76,3 +76,4 @@ npm run start:dev
 | [09-KEYCLOAK-ADMIN.md](./09-KEYCLOAK-ADMIN.md)   | Keycloak Admin Service: CRUD de usuários, roles         |
 | [10-CUSTOMER-PORTAL.md](./10-CUSTOMER-PORTAL.md) | Customer Portal: gerenciamento de assinatura via Stripe |
 | [11-MAIL.md](./11-MAIL.md)                       | Email transacional: templates, Mailtrap, integração     |
+| [12-ADMIN-DASHBOARD.md](./12-ADMIN-DASHBOARD.md) | Admin Dashboard: métricas, listagem, impersonação       |

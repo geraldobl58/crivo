@@ -176,16 +176,19 @@ Provider: **nodemailer** (SMTP) com Mailtrap em dev. Templates HTML inline (`src
 
 ---
 
-## Fase 7 — Dashboard Admin Interno
+## Fase 7 — Dashboard Admin Interno ✅
+
+**Localização:** `src/internal/admin/`  
+**Status:** Implementado — ver [12-ADMIN-DASHBOARD.md](12-ADMIN-DASHBOARD.md)
 
 Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 
-| Método | Endpoint                           | Descrição                   |
-| ------ | ---------------------------------- | --------------------------- |
-| `GET`  | `/admin/companies`                 | Lista todos os tenants      |
-| `GET`  | `/admin/companies/:id`             | Detalhe de uma empresa      |
-| `POST` | `/admin/companies/:id/impersonate` | Gerar token de impersonação |
-| `GET`  | `/admin/plans`                     | Gerenciar planos e preços   |
+| Método | Endpoint                           | Descrição                                  |
+| ------ | ---------------------------------- | ------------------------------------------ |
+| `GET`  | `/admin/metrics`                   | Métricas gerais da plataforma              |
+| `GET`  | `/admin/companies`                 | Lista todos os tenants (paginado)          |
+| `GET`  | `/admin/companies/:id`             | Detalhe completo de uma empresa            |
+| `POST` | `/admin/companies/:id/impersonate` | Gerar token de impersonação (via Keycloak) |
 
 ---
 
@@ -198,8 +201,10 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 [✅] Fase 4 — Keycloak Admin          (concluído)
 [✅] Fase 5 — Customer Portal         (concluído)
 [✅] Fase 6 — Email                   (concluído)
-[P1] Fase 7 — Admin Dashboard         ← PRÓXIMO PASSO
+[✅] Fase 7 — Admin Dashboard         (concluído)
 ```
+
+**Todas as fases do backend concluídas!** 🎉
 
 ---
 
@@ -227,3 +232,4 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 | Keycloak Admin Service    | ✅     | Client Credentials, CRUD users, assign roles            |
 | Customer Portal           | ✅     | `POST /stripe/portal` → Stripe hosted portal            |
 | Email Transacional        | ✅     | Mailtrap SMTP, 5 templates, best-effort sends           |
+| Admin Dashboard           | ✅     | Métricas, listagem cross-tenant, impersonação           |
