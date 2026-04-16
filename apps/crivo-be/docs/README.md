@@ -63,14 +63,15 @@ npm run start:dev
 
 ## Documentação
 
-| Arquivo                                        | Conteúdo                                                |
-| ---------------------------------------------- | ------------------------------------------------------- |
-| [01-SETUP.md](./01-SETUP.md)                   | Infraestrutura, Keycloak, Stripe, variáveis de ambiente |
-| [02-ARCHITECTURE.md](./02-ARCHITECTURE.md)     | Clean Architecture, multi-tenancy, guards, Prisma       |
-| [03-API.md](./03-API.md)                       | Referência completa dos endpoints                       |
-| [04-USER-JOURNEY.md](./04-USER-JOURNEY.md)     | Fluxo completo: onboarding → autenticação → uso         |
-| [05-TESTING.md](./05-TESTING.md)               | Testes manuais: guards, limites de plano, tenant        |
-| [06-STRIPE.md](./06-STRIPE.md)                 | Configuração do Stripe: produtos, prices, webhooks      |
-| [07-PLANS.md](./07-PLANS.md)                   | Plans CRUD: endpoints, modelo, decisões de design       |
-| [08-SUBSCRIPTIONS.md](./08-SUBSCRIPTIONS.md)   | Subscriptions API: assinatura do tenant, faturas        |
-| [09-KEYCLOAK-ADMIN.md](./09-KEYCLOAK-ADMIN.md) | Keycloak Admin Service: CRUD de usuários, roles         |
+| Arquivo                                          | Conteúdo                                                |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| [01-SETUP.md](./01-SETUP.md)                     | Infraestrutura, Keycloak, Stripe, variáveis de ambiente |
+| [02-ARCHITECTURE.md](./02-ARCHITECTURE.md)       | Clean Architecture, multi-tenancy, guards, Prisma       |
+| [03-API.md](./03-API.md)                         | Referência completa dos endpoints                       |
+| [04-USER-JOURNEY.md](./04-USER-JOURNEY.md)       | Fluxo completo: onboarding → autenticação → uso         |
+| [05-TESTING.md](./05-TESTING.md)                 | Testes manuais: guards, limites de plano, tenant        |
+| [06-STRIPE.md](./06-STRIPE.md)                   | Configuração do Stripe: produtos, prices, webhooks      |
+| [07-PLANS.md](./07-PLANS.md)                     | Plans CRUD: endpoints, modelo, decisões de design       |
+| [08-SUBSCRIPTIONS.md](./08-SUBSCRIPTIONS.md)     | Subscriptions API: assinatura do tenant, faturas        |
+| [09-KEYCLOAK-ADMIN.md](./09-KEYCLOAK-ADMIN.md)   | Keycloak Admin Service: CRUD de usuários, roles         |
+| [10-CUSTOMER-PORTAL.md](./10-CUSTOMER-PORTAL.md) | Customer Portal: gerenciamento de assinatura via Stripe |

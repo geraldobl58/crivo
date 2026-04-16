@@ -135,22 +135,27 @@ Já configuradas no `.env`: `KEYCLOAK_BASE_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLI
 
 ---
 
-## Fase 5 — Portal do Cliente (Customer Portal)
+## Fase 5 — Portal do Cliente (Customer Portal) ✅
+
+**Localização:** `src/internal/stripe/` (mesmo módulo do checkout/webhook)  
+**Status:** Implementado — ver [10-CUSTOMER-PORTAL.md](10-CUSTOMER-PORTAL.md)
 
 Permite ao usuário gerenciar a assinatura pelo Stripe diretamente, sem passar pelo backend.
 
-```
-POST /stripe/portal
-Authorization: Bearer <token>
+### Endpoint
 
-Response: { "url": "https://billing.stripe.com/..." }
-```
+| Método | Endpoint         | Auth   | Tenant | Descrição                          |
+| ------ | ---------------- | ------ | ------ | ---------------------------------- |
+| `POST` | `/stripe/portal` | ✅ JWT | ✅     | Gera URL do Stripe Customer Portal |
 
-Fluxo:
+### Fluxo
 
-1. Lê `company.stripeCustomerId`
-2. Chama `stripe.billingPortal.sessions.create({ customer, return_url })`
-3. Retorna a URL
+1. Recebe `companyId` via `TenantInterceptor`
+2. Busca `company.stripeCustomerId` no Postgres
+3. Chama `stripe.billingPortal.sessions.create({ customer, return_url })`
+4. Retorna `{ url }` para redirect no frontend
+
+> Os webhooks existentes (Fase 2) já capturam todas as mudanças feitas no portal (cancelamento, upgrade, etc).
 
 ---
 
@@ -190,9 +195,9 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 [✅] Fase 2 — Stripe Checkout/Webhook (concluído)
 [✅] Fase 3 — Subscriptions read      (concluído)
 [✅] Fase 4 — Keycloak Admin          (concluído)
-[P1] Fase 5 — Customer Portal         ← PRÓXIMO PASSO
-[P2] Fase 6 — Email
-[P3] Fase 7 — Admin Dashboard
+[✅] Fase 5 — Customer Portal         (concluído)
+[P1] Fase 6 — Email                    ← PRÓXIMO PASSO
+[P2] Fase 7 — Admin Dashboard
 ```
 
 ---
@@ -219,3 +224,4 @@ Endpoints internos (role `SUPPORT`) para gerenciar tenants:
 | Plans CRUD                | ✅     | `GET /plans` (público) + `POST/PATCH` (admin)           |
 | Subscriptions API         | ✅     | `GET /subscriptions/me` + `GET /subscriptions/invoices` |
 | Keycloak Admin Service    | ✅     | Client Credentials, CRUD users, assign roles            |
+| Customer Portal           | ✅     | `POST /stripe/portal` → Stripe hosted portal            |
