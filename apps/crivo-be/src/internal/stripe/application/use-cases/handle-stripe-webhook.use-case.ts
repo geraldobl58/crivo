@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type Stripe from 'stripe';
 import { PrismaService } from '../../../../libs/prisma/prisma.service';
 import { StripeService } from '../../stripe.service';
@@ -18,6 +19,7 @@ export class HandleStripeWebhookUseCase {
     private readonly prisma: PrismaService,
     private readonly stripe: StripeService,
     private readonly mail: MailService,
+    private readonly config: ConfigService,
   ) {}
 
   async execute(input: HandleStripeWebhookInput): Promise<void> {
@@ -131,6 +133,24 @@ export class HandleStripeWebhookUseCase {
     this.logger.log(
       `Subscription activated for company ${companyId} on plan ${planType}`,
     );
+
+    // Send welcome email after payment is confirmed
+    const owner = await this.prisma.user.findFirst({
+      where: { companyId, role: 'OWNER' },
+      select: { email: true, company: { select: { name: true } } },
+    });
+
+    if (owner) {
+      const frontendUrl =
+        this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+
+      await this.mail.sendWelcome({
+        to: owner.email,
+        companyName: owner.company?.name ?? 'Sua empresa',
+        planType,
+        frontendUrl,
+      });
+    }
   }
 
   private async handleSubscriptionUpdated(stripeSub: any): Promise<void> {

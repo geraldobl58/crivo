@@ -8,6 +8,7 @@ import {
   Req,
   UseInterceptors,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -113,6 +114,7 @@ export class StripeController {
 
   @Post('webhook')
   @Public()
+  @SkipThrottle()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: '[Stripe only] Receber eventos do Stripe',

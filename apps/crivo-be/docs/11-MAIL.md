@@ -10,7 +10,7 @@ O módulo envia emails automáticos em resposta a eventos de negócio da platafo
 
 | Trigger                         | Email                        | Enviado de                   |
 | ------------------------------- | ---------------------------- | ---------------------------- |
-| Onboarding concluído            | Boas-vindas + instruções     | `OnboardCompanyUseCase`      |
+| `checkout.session.completed`    | Boas-vindas + instruções     | `HandleStripeWebhookUseCase` |
 | `invoice.payment_succeeded`     | Confirmação de pagamento     | `HandleStripeWebhookUseCase` |
 | `invoice.payment_failed`        | Alerta + link para atualizar | `HandleStripeWebhookUseCase` |
 | `customer.subscription.deleted` | Confirmação de cancelamento  | `HandleStripeWebhookUseCase` |
@@ -149,13 +149,18 @@ await mail.sendTrialExpiring({
 
 ## Integração com fluxos existentes
 
-### Onboarding
+### Onboarding + Checkout
 
 ```
 POST /onboarding/setup-company
   └── OnboardCompanyUseCase.execute()
-        ├── ... cria empresa, subscription, checkout ...
-        └── mail.sendWelcome()  ← NOVO
+        ├── ... cria empresa, subscription (INCOMPLETE), checkout URL ...
+        └── (nenhum email — aguarda pagamento)
+
+POST /stripe/webhook → checkout.session.completed
+  └── HandleStripeWebhookUseCase.execute()
+        ├── ... ativa subscription ...
+        └── mail.sendWelcome()  ← Enviado após pagamento confirmado
 ```
 
 ### Webhooks Stripe

@@ -19,6 +19,24 @@ services:
     retries: 2
 
     routes:
+      # Stripe Webhook — rate limit mais alto (eventos legítimos do Stripe)
+      - name: crivo-stripe-webhook
+        paths:
+          - /api/stripe/webhook
+        methods:
+          - POST
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 1000
+              policy: local
+              fault_tolerant: true
+
       # API principal — todas as rotas do backend
       - name: crivo-api-routes
         paths:

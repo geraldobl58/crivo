@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import type { PlanType } from '@prisma/client';
 import { PrismaService } from '../../../../libs/prisma/prisma.service';
 import { StripeService } from '../../../stripe/stripe.service';
-import { MailService } from '../../../../libs/mail/mail.service';
 
 export interface OnboardCompanyInput {
   keycloakId: string;
@@ -30,7 +29,6 @@ export class OnboardCompanyUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripe: StripeService,
-    private readonly mail: MailService,
     private readonly config: ConfigService,
   ) {}
 
@@ -156,7 +154,31 @@ export class OnboardCompanyUseCase {
 
       checkoutUrl = session.url as string;
     } catch (error) {
-      this.logger.error('Failed to create Stripe checkout session', error);
+      this.logger.error(
+        'Failed to create Stripe checkout session, rolling back',
+        error,
+      );
+
+      // Rollback: delete company/subscription + Stripe customer
+      try {
+        await this.prisma.$transaction([
+          this.prisma.subscription.deleteMany({
+            where: { companyId: company.id },
+          }),
+          this.prisma.user.update({
+            where: { id: user.id },
+            data: { companyId: null, role: 'USER', pendingPlanType: null },
+          }),
+          this.prisma.company.delete({ where: { id: company.id } }),
+        ]);
+        await this.stripe.deleteCustomer(stripeCustomer.id);
+      } catch (cleanupError) {
+        this.logger.error(
+          'Rollback failed — manual cleanup needed',
+          cleanupError,
+        );
+      }
+
       throw new BadRequestException(
         'Failed to create checkout session. Please try again.',
       );
@@ -165,14 +187,6 @@ export class OnboardCompanyUseCase {
     this.logger.log(
       `Onboarding completed for user ${user.id} → company ${company.id} (plan: ${input.planType})`,
     );
-
-    // Send welcome email (best-effort, does not block response)
-    await this.mail.sendWelcome({
-      to: user.email,
-      companyName: input.companyName,
-      planType: input.planType,
-      frontendUrl,
-    });
 
     return {
       company: { id: company.id, name: company.name },

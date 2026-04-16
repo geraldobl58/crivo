@@ -57,7 +57,7 @@ model User {
 
   // Relação com a Empresa (Multi-tenancy)
   companyId  String?
-  company    Company? @relation(fields: [companyId], references: [id])
+  company    Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -129,7 +129,7 @@ model Subscription {
 
   // Ligação com a Empresa
   companyId String @unique // Uma empresa tem apenas uma assinatura
-  company   Company @relation(fields: [companyId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Ligação com o Plano
   planId    String
@@ -168,7 +168,7 @@ model Invoice {
 
   // Ligação com a Subscription
   subscriptionId String
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   // Stripe
   stripeInvoiceId   String? @unique // ID da invoice no Stripe (ex: in_xxx)
@@ -204,7 +204,7 @@ model ChartOfAccount {
 
   // Multi-tenancy
   companyId String
-  company   Company @relation(fields: [companyId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Hierarquia (conta pai/filhas)
   parentId String?
