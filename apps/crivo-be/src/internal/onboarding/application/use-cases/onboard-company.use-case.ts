@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import type { PlanType } from '@prisma/client';
 import { PrismaService } from '../../../../libs/prisma/prisma.service';
 import { StripeService } from '../../../stripe/stripe.service';
+import { MailService } from '../../../../libs/mail/mail.service';
 
 export interface OnboardCompanyInput {
   keycloakId: string;
@@ -29,6 +30,7 @@ export class OnboardCompanyUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripe: StripeService,
+    private readonly mail: MailService,
     private readonly config: ConfigService,
   ) {}
 
@@ -163,6 +165,14 @@ export class OnboardCompanyUseCase {
     this.logger.log(
       `Onboarding completed for user ${user.id} → company ${company.id} (plan: ${input.planType})`,
     );
+
+    // Send welcome email (best-effort, does not block response)
+    await this.mail.sendWelcome({
+      to: user.email,
+      companyName: input.companyName,
+      planType: input.planType,
+      frontendUrl,
+    });
 
     return {
       company: { id: company.id, name: company.name },

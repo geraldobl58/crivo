@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import type Stripe from 'stripe';
 import { PrismaService } from '../../../../libs/prisma/prisma.service';
 import { StripeService } from '../../stripe.service';
+import { MailService } from '../../../../libs/mail/mail.service';
 import { SubscriptionStatus, InvoiceStatus, PlanType } from '@prisma/client';
 
 export interface HandleStripeWebhookInput {
@@ -16,6 +17,7 @@ export class HandleStripeWebhookUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripe: StripeService,
+    private readonly mail: MailService,
   ) {}
 
   async execute(input: HandleStripeWebhookInput): Promise<void> {
@@ -190,6 +192,19 @@ export class HandleStripeWebhookUseCase {
       },
     });
 
+    // Send cancellation email to company owner
+    const owner = await this.prisma.user.findFirst({
+      where: { companyId: subscription.companyId, role: 'OWNER' },
+      select: { email: true, company: { select: { name: true } } },
+    });
+
+    if (owner) {
+      await this.mail.sendSubscriptionCanceled({
+        to: owner.email,
+        companyName: owner.company?.name ?? 'Sua empresa',
+      });
+    }
+
     this.logger.log(`Subscription ${subscription.id} canceled`);
   }
 
@@ -234,6 +249,22 @@ export class HandleStripeWebhookUseCase {
     this.logger.log(
       `Invoice ${invoice.id} paid for subscription ${subscription.id}`,
     );
+
+    // Send payment confirmation email to company owner
+    const owner = await this.prisma.user.findFirst({
+      where: { companyId: subscription.companyId, role: 'OWNER' },
+      select: { email: true, company: { select: { name: true } } },
+    });
+
+    if (owner) {
+      await this.mail.sendPaymentSucceeded({
+        to: owner.email,
+        companyName: owner.company?.name ?? 'Sua empresa',
+        amountPaid: invoice.amount_paid,
+        currency: invoice.currency ?? 'brl',
+        invoiceId: invoice.id,
+      });
+    }
   }
 
   private async handleInvoicePaymentFailed(invoice: any): Promise<void> {
@@ -271,6 +302,21 @@ export class HandleStripeWebhookUseCase {
     this.logger.warn(
       `Invoice payment failed for subscription ${subscription.id}`,
     );
+
+    // Send payment failed email to company owner
+    const owner = await this.prisma.user.findFirst({
+      where: { companyId: subscription.companyId, role: 'OWNER' },
+      select: { email: true, company: { select: { name: true } } },
+    });
+
+    if (owner) {
+      await this.mail.sendPaymentFailed({
+        to: owner.email,
+        companyName: owner.company?.name ?? 'Sua empresa',
+        amountDue: invoice.amount_due,
+        currency: invoice.currency ?? 'brl',
+      });
+    }
   }
 
   private mapStripeStatus(stripeStatus: string): SubscriptionStatus {

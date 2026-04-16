@@ -9,6 +9,7 @@ import { AuthModule } from './libs/auth/auth.module';
 import { JwtAuthGuard } from './libs/auth/jwt-auth.guard';
 import { TenantModule } from './libs/tenant/tenant.module';
 import { KeycloakAdminModule } from './libs/keycloak/keycloak-admin.module';
+import { MailModule } from './libs/mail/mail.module';
 import { CompanyModule } from './internal/companies/company.module';
 import { UserModule } from './internal/users/user.module';
 import { PlanModule } from './internal/plans/plan.module';
@@ -78,6 +79,7 @@ import { StripeModule } from './internal/stripe/stripe.module';
     AuthModule,
     TenantModule,
     KeycloakAdminModule,
+    MailModule,
     CompanyModule,
     UserModule,
     PlanModule,
