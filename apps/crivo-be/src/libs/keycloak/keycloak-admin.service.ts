@@ -336,4 +336,51 @@ export class KeycloakAdminService {
 
     return { keycloakId: users[0].id, email: users[0].email };
   }
+
+  /**
+   * Gera um access token impersonando um usuário via Keycloak Token Exchange.
+   * Requer que o client tenha permissão de token-exchange no Keycloak.
+   *
+   * @see https://www.keycloak.org/docs/latest/securing_apps/#_token-exchange
+   */
+  async exchangeToken(
+    targetKeycloakId: string,
+  ): Promise<{ accessToken: string; expiresIn: number }> {
+    const tokenUrl = `${this.baseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
+
+    const body = new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      requested_subject: targetKeycloakId,
+      subject_token: await this.getAccessToken(),
+      subject_token_type: 'urn:ietf:params:oauth:token-type:access_token',
+    });
+
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+
+    if (!response.ok) {
+      const error = await response.text().catch(() => 'Unknown error');
+      this.logger.error(
+        `Token exchange failed for user ${targetKeycloakId}: ${response.status} — ${error}`,
+      );
+      throw new ServiceUnavailableException(
+        'Failed to generate impersonation token. Ensure token-exchange is enabled in Keycloak.',
+      );
+    }
+
+    const data = (await response.json()) as {
+      access_token: string;
+      expires_in: number;
+    };
+
+    return {
+      accessToken: data.access_token,
+      expiresIn: data.expires_in,
+    };
+  }
 }

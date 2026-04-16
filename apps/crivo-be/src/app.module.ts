@@ -17,6 +17,7 @@ import { SubscriptionModule } from './internal/subscriptions/subscription.module
 import { OnboardingModule } from './internal/onboarding/onboarding.module';
 import { AuthInternalModule } from './internal/auth/auth.module';
 import { StripeModule } from './internal/stripe/stripe.module';
+import { AdminModule } from './internal/admin/admin.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { StripeModule } from './internal/stripe/stripe.module';
     OnboardingModule,
     AuthInternalModule,
     StripeModule,
+    AdminModule,
   ],
   providers: [
     {
