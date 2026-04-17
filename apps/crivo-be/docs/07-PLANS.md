@@ -239,24 +239,24 @@ model Plan {
 ### Listar planos (público)
 
 ```bash
-curl http://localhost:3333/plans
+curl http://localhost:8000/plans
 ```
 
 ### Buscar plano por ID
 
 ```bash
-curl http://localhost:3333/plans/<uuid>
+curl http://localhost:8000/plans/<uuid>
 ```
 
 ### Criar plano (requer auth)
 
 ```bash
-TOKEN=$(curl -s -X POST http://localhost:3333/auth/dev-token \
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/dev-token \
   -H "Content-Type: application/json" \
   -d '{"username":"janedoe@email.com","password":"senha"}' \
   | jq -r .access_token)
 
-curl -X POST http://localhost:3333/plans \
+curl -X POST http://localhost:8000/plans \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -271,7 +271,7 @@ curl -X POST http://localhost:3333/plans \
 ### Atualizar plano (requer auth)
 
 ```bash
-curl -X PATCH http://localhost:3333/plans/<uuid> \
+curl -X PATCH http://localhost:8000/plans/<uuid> \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"stripePriceId": "price_xxxxxxxxxxxxx", "trialDays": 7}'

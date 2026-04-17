@@ -412,7 +412,7 @@ stripe listen --forward-to localhost:3333/stripe/webhook
 ### 6.2 Login (obter token)
 
 ```bash
-TOKEN=$(curl -s -X POST http://localhost:3333/auth/dev-token \
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/dev-token \
   -H "Content-Type: application/json" \
   -d '{"username":"janedoe@email.com","password":"senha"}' \
   | jq -r .access_token)
@@ -425,7 +425,7 @@ echo $TOKEN
 ### 6.3 Onboarding (criar empresa + checkout)
 
 ```bash
-curl -X POST http://localhost:3333/onboarding/setup-company \
+curl -X POST http://localhost:8000/onboarding/setup-company \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"planType":"BASIC","companyName":"Minha Empresa LTDA"}'

@@ -170,6 +170,6 @@ npm run start:dev
 
 | Recurso       | URL                          |
 | ------------- | ---------------------------- |
-| API           | `http://localhost:3333`      |
-| Swagger       | `http://localhost:3333/docs` |
+| API           | `http://localhost:8000`      |
+| Swagger       | `http://localhost:8000/docs` |
 | Prisma Studio | `npm run prisma:studio`      |

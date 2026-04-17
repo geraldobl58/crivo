@@ -34,12 +34,12 @@ O frontend e apps externas acessam tudo pela porta **8000** do Kong. O Kong rote
 
 | Recurso        | URL direta (dev)               | Via Kong                           |
 | -------------- | ------------------------------ | ---------------------------------- |
-| API Backend    | `http://localhost:3333`        | `http://localhost:8000/api/*`      |
-| Swagger        | `http://localhost:3333/docs`   | `http://localhost:8000/docs`       |
+| API Backend    | `http://localhost:8000`        | `http://localhost:8000/api/*`      |
+| Swagger        | `http://localhost:8000/docs`   | `http://localhost:8000/docs`       |
 | Keycloak       | `http://localhost:8080`        | `http://localhost:8000/auth/*`     |
 | Kong Admin API | —                              | `http://localhost:8001`            |
 | Konga (UI)     | —                              | `http://localhost:1337`            |
-| Health check   | `http://localhost:3333/health` | `http://localhost:8000/api/health` |
+| Health check   | `http://localhost:8000/health` | `http://localhost:8000/api/health` |
 
 ---
 

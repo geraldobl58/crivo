@@ -13,7 +13,7 @@ Fluxo passo a passo para validar os guards, limites de plano e hierarquia de emp
 Use o usuário criado no onboarding (ver Etapa 2 abaixo ou use um existente):
 
 ```bash
-curl -s -X POST http://localhost:3333/auth/dev-token \
+curl -s -X POST http://localhost:8000/auth/dev-token \
   -H "Content-Type: application/json" \
   -d '{ "username": "owner@empresa.com", "password": "senha123" }' \
   | jq .access_token
@@ -26,7 +26,7 @@ curl -s -X POST http://localhost:3333/auth/dev-token \
 Crie um usuário com `role: USER` via `POST /users` (usando o token OWNER) e depois obtenha o token dele:
 
 ```bash
-curl -s -X POST http://localhost:3333/auth/dev-token \
+curl -s -X POST http://localhost:8000/auth/dev-token \
   -H "Content-Type: application/json" \
   -d '{ "username": "funcionario@empresa.com", "password": "senha123" }' \
   | jq .access_token
@@ -39,7 +39,7 @@ curl -s -X POST http://localhost:3333/auth/dev-token \
 ## 2. Onboarding — criar empresa de teste
 
 ```bash
-curl -s -X POST http://localhost:3333/onboarding \
+curl -s -X POST http://localhost:8000/onboarding \
   -H "Content-Type: application/json" \
   -d '{
     "companyName": "Contabilidade Teste LTDA",
@@ -61,7 +61,7 @@ curl -s -X POST http://localhost:3333/onboarding \
 ### 3.1 OWNER cria usuário → deve funcionar
 
 ```bash
-curl -s -X POST http://localhost:3333/users \
+curl -s -X POST http://localhost:8000/users \
   -H "Authorization: Bearer $OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -78,7 +78,7 @@ curl -s -X POST http://localhost:3333/users \
 ### 3.2 USER comum tenta criar usuário → deve ser bloqueado
 
 ```bash
-curl -s -X POST http://localhost:3333/users \
+curl -s -X POST http://localhost:8000/users \
   -H "Authorization: Bearer $USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "email": "novo@empresa.com", "password": "x", "firstname": "X", "lastname": "Y", "role": "USER" }'
@@ -100,7 +100,7 @@ O plano **TRIAL** permite **1 usuário**. Se o onboarding já criou o OWNER (1 u
 
 ```bash
 # Segunda tentativa de criar usuário (OWNER token, plano TRIAL)
-curl -s -X POST http://localhost:3333/users \
+curl -s -X POST http://localhost:8000/users \
   -H "Authorization: Bearer $OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,7 +129,7 @@ curl -s -X POST http://localhost:3333/users \
 ### 5.1 USER comum tenta criar sub-empresa → deve ser bloqueado
 
 ```bash
-curl -s -X POST http://localhost:3333/companies \
+curl -s -X POST http://localhost:8000/companies \
   -H "Authorization: Bearer $USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Filial Teste", "taxId": "98.765.432/0001-00" }'
@@ -140,7 +140,7 @@ curl -s -X POST http://localhost:3333/companies \
 ### 5.2 OWNER cria sub-empresa → deve funcionar
 
 ```bash
-curl -s -X POST http://localhost:3333/companies \
+curl -s -X POST http://localhost:8000/companies \
   -H "Authorization: Bearer $OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Filial Teste LTDA", "taxId": "98.765.432/0001-00" }'
@@ -156,13 +156,13 @@ O plano **TRIAL** permite **1 sub-empresa**. Crie a primeira e tente a segunda:
 
 ```bash
 # Primeira sub-empresa (deve funcionar)
-curl -s -X POST http://localhost:3333/companies \
+curl -s -X POST http://localhost:8000/companies \
   -H "Authorization: Bearer $OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Filial 1 LTDA", "taxId": "11.111.111/0001-11" }'
 
 # Segunda sub-empresa (deve ser bloqueada no TRIAL)
-curl -s -X POST http://localhost:3333/companies \
+curl -s -X POST http://localhost:8000/companies \
   -H "Authorization: Bearer $OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Filial 2 LTDA", "taxId": "22.222.222/0001-22" }'
@@ -184,12 +184,12 @@ Onboarde **duas empresas distintas** e verifique que cada OWNER vê apenas os da
 
 ```bash
 # Com token do OWNER da empresa A
-curl -s http://localhost:3333/users \
+curl -s http://localhost:8000/users \
   -H "Authorization: Bearer $OWNER_A_TOKEN"
 # → retorna apenas usuários da empresa A
 
 # Com token do OWNER da empresa B
-curl -s http://localhost:3333/users \
+curl -s http://localhost:8000/users \
   -H "Authorization: Bearer $OWNER_B_TOKEN"
 # → retorna apenas usuários da empresa B
 ```
@@ -211,7 +211,7 @@ npm run prisma:studio
 Em seguida, tente qualquer `POST` protegido pelo `PlanLimitGuard`:
 
 ```bash
-curl -s -X POST http://localhost:3333/users \
+curl -s -X POST http://localhost:8000/users \
   -H "Authorization: Bearer $OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "email": "x@x.com", "password": "x", "firstname": "X", "lastname": "Y", "role": "USER" }'
@@ -227,7 +227,7 @@ curl -s -X POST http://localhost:3333/users \
 
 ## 9. Verificar via Swagger
 
-Acesse `http://localhost:3333/docs`, clique em **Authorize** e cole o JWT Bearer token.
+Acesse `http://localhost:8000/docs`, clique em **Authorize** e cole o JWT Bearer token.
 
 Todos os cenários acima podem ser reproduzidos via Swagger UI. Use o botão **Try it out** em cada endpoint.
 

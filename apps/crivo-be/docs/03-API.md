@@ -1,7 +1,7 @@
 # API Reference
 
-Base URL: `http://localhost:3333`  
-Swagger UI: `http://localhost:3333/docs`
+Base URL: `http://localhost:8000`  
+Swagger UI: `http://localhost:8000/docs`
 
 Todas as rotas exigem `Authorization: Bearer <jwt-token>` exceto as marcadas como **Público**.
 

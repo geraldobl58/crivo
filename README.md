@@ -85,8 +85,8 @@ npm run dev
 | -------------- | ------------------------------------- |
 | Frontend       | `http://localhost:3000`               |
 | API (via Kong) | `http://localhost:8000/api`           |
-| API (direto)   | `http://localhost:3333`               |
-| Swagger        | `http://localhost:3333/docs`          |
+| API (direto)   | `http://localhost:8000`               |
+| Swagger        | `http://localhost:8000/docs`          |
 | Keycloak Admin | `http://localhost:8080` (admin/admin) |
 | Kong Admin API | `http://localhost:8001`               |
 | Konga UI       | `http://localhost:1337`               |
