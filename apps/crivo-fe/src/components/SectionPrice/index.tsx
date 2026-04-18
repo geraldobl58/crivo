@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { signIn } from "next-auth/react";
+import Link from "next/link";
 
 import { Card } from "../Card";
 import { FeatureList } from "../FeatureList";
@@ -75,19 +75,16 @@ export const SectionPrice = () => {
             priceSuffix={priceSuffix}
             content={<FeatureList items={allFeatures} />}
             footer={
-              <button
-                onClick={() =>
-                  !isEnterprise &&
-                  signIn("keycloak", { callbackUrl: "/secure/dashboard" })
-                }
-                className={`w-full py-3 rounded-lg text-sm font-semibold cursor-pointer transition-colors ${
+              <Link
+                href="/secure/dashboard"
+                className={`block w-full py-3 rounded-lg text-sm font-semibold text-center cursor-pointer transition-colors ${
                   isHighlighted
                     ? "bg-indigo-500 hover:bg-indigo-400 text-white"
-                    : "border border-gray-700 hover:bg-gray-800"
+                    : "border border-gray-700 hover:bg-gray-800 text-white"
                 }`}
               >
                 {ctaLabel}
-              </button>
+              </Link>
             }
           />
         );

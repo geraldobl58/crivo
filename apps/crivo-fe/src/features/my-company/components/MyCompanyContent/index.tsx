@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import {
   Alert,
   Button,
@@ -26,7 +25,7 @@ import { MyCompanySearch } from "../MyCompanySearch";
 import { buildColumns } from "../MyCompanyList/Columns";
 import { MyCompanyCreate } from "../MyCompanyCreate";
 
-import { useCompanies, usePlanLimit } from "../../hooks";
+import { useCompanies } from "../../hooks";
 import { deleteCompanyAction, updateCompanyAction } from "../../actions";
 import {
   CompanyQueryParams,
@@ -37,7 +36,6 @@ import { CompanyResponse } from "../../types";
 
 export const MyCompanyContent = () => {
   const [open, setOpen] = useState(false);
-  const { update: updateSession } = useSession();
 
   // Edit state
   const [editTarget, setEditTarget] = useState<CompanyResponse | null>(null);
@@ -66,8 +64,6 @@ export const MyCompanyContent = () => {
     refetch,
   } = useCompanies();
 
-  const { isAtLimit, limitMessage } = usePlanLimit(total);
-
   // Edit form
   const {
     handleSubmit: handleEditSubmit,
@@ -83,7 +79,6 @@ export const MyCompanyContent = () => {
   useEffect(() => {
     if (editTarget) {
       resetEdit({ name: editTarget.name, tax_id: editTarget.tax_id ?? "" });
-      setEditError(null);
     }
   }, [editTarget, resetEdit]);
 
@@ -160,7 +155,6 @@ export const MyCompanyContent = () => {
             onSuccess={() => {
               setOpen(false);
               refetch();
-              updateSession();
             }}
           />
         }
@@ -279,15 +273,15 @@ export const MyCompanyContent = () => {
         description="Gerencie as informações e configurações da sua empresa, incluindo dados cadastrais, usuários e preferências."
         content={
           <Tooltip
-            title={isAtLimit ? (limitMessage ?? "") : ""}
+            title="Limite de empresas atingido. Atualize seu plano para adicionar mais."
             arrow
-            disableHoverListener={!isAtLimit}
+            disableHoverListener={true}
           >
             <span>
               <Button
                 variant="contained"
                 onClick={() => setOpen(true)}
-                disabled={isAtLimit}
+                disabled={true}
               >
                 Novo Registro
               </Button>

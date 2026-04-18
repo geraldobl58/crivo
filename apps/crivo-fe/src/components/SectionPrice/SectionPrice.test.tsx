@@ -3,10 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SectionPrice } from ".";
 
-vi.mock("next-auth/react", () => ({
-  signIn: vi.fn(),
-}));
-
 const mockPlans = [
   {
     id: "1",
@@ -118,13 +114,13 @@ describe("SectionPrice", () => {
     render(<SectionPrice />);
     await screen.findByText("Starter");
     expect(
-      screen.getByRole("button", { name: /Começar com o Starter/i }),
+      screen.getByRole("link", { name: /Começar com o Starter/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Assinar o Professional/i }),
+      screen.getByRole("link", { name: /Assinar o Professional/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Falar com Vendas/i }),
+      screen.getByRole("link", { name: /Falar com Vendas/i }),
     ).toBeInTheDocument();
   });
 

@@ -3,10 +3,9 @@
 import { useCallback, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CompanyQueryParams } from "../schemas";
-import { getCompanyAction, getMeAction } from "../actions";
+import { getCompanyAction } from "../actions";
 
 const COMPANIES_QUERY_KEY = "companies";
-const ME_QUERY_KEY = "auth-me";
 
 export function useCompanies(initialParams?: CompanyQueryParams) {
   const [queryParams, setQueryParams] = useState<CompanyQueryParams>(
@@ -55,40 +54,3 @@ export function useCompanies(initialParams?: CompanyQueryParams) {
     handleFilters,
   };
 }
-
-/**
- * usePlanLimit — verifica se o usuário atingiu o limite de empresas do plano.
- *
- * Busca GET /auth/me (React Query, cache 5 min) e expõe:
- *   - isAtLimit: true se total_atual >= max_companies (e o plano não é ilimitado)
- *   - limitMessage: mensagem legível para exibir no tooltip / alert
- *   - maxCompanies: limite do plano (-1 = ilimitado)
- *   - isLoading: enquanto a chamada está em andamento
- */
-export function usePlanLimit(currentTotal: number) {
-  const { data, isLoading } = useQuery({
-    queryKey: [ME_QUERY_KEY],
-    queryFn: async () => {
-      const result = await getMeAction();
-      if (!result.success || !result.data) return null;
-      return result.data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache — plano muda raramente
-  });
-
-  const maxCompanies = data?.plan?.max_companies ?? null;
-  const planName = data?.plan?.name ?? null;
-
-  // -1 = ilimitado (enterprise); null = ainda carregando
-  const isAtLimit =
-    maxCompanies !== null && maxCompanies !== -1
-      ? currentTotal >= maxCompanies
-      : false;
-
-  const limitMessage = isAtLimit
-    ? `Seu plano ${planName ? `(${planName})` : ""} permite no máximo ${maxCompanies} empresa${maxCompanies === 1 ? "" : "s"}. Faça upgrade para adicionar mais.`
-    : null;
-
-  return { isAtLimit, limitMessage, maxCompanies, planName, isLoading };
-}
-

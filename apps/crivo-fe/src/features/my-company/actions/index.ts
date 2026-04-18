@@ -4,7 +4,6 @@ import {
   createCompany,
   deleteCompany,
   getCompanies,
-  getMe,
   updateCompany,
 } from "../http";
 import {
@@ -77,19 +76,5 @@ export async function deleteCompanyAction(
       success: false,
       message: "Erro ao remover empresa. Tente novamente.",
     };
-  }
-}
-
-export async function getMeAction(): Promise<{
-  success: boolean;
-  data?: any;
-  message?: string;
-}> {
-  try {
-    const data = await getMe();
-    return { success: true, data };
-  } catch (error) {
-    console.error("Erro ao buscar dados do usuário:", error);
-    return { success: false, message: "Erro ao buscar dados do usuário." };
   }
 }

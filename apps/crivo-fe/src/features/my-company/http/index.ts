@@ -1,5 +1,4 @@
 import api from "@/config/api";
-import { MeResponse } from "@/types/api";
 
 import {
   CompanyListResponse,
@@ -40,9 +39,4 @@ export async function updateCompany(
 
 export async function deleteCompany(id: string): Promise<void> {
   await api.delete(`/companies/${id}`);
-}
-
-export async function getMe(): Promise<MeResponse> {
-  const { data } = await api.get<MeResponse>("/auth/me");
-  return data;
 }

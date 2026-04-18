@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
-import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Alert from "@mui/material/Alert";
@@ -19,7 +16,6 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 
 import {
-  CheckCircle,
   Building2,
   Users,
   CreditCard,
@@ -28,100 +24,54 @@ import {
   ArrowRight,
   Play,
   Zap,
-  PartyPopper,
 } from "lucide-react";
 
 import { Container } from "@/app/(administrator)/components/Container";
 import { TitleBar } from "@/app/(administrator)/components/TitleBar";
 
-// ─── Constantes ──────────────────────────────────────────────────────────────
-
-const PLAN_LABELS: Record<string, string> = {
-  starter: "Starter",
-  professional: "Professional",
-  enterprise: "Enterprise",
-};
-
-const PLAN_COLORS: Record<string, "default" | "primary" | "success"> = {
-  starter: "default",
-  professional: "primary",
-  enterprise: "success",
-};
-
-// ─── Componente ───────────────────────────────────────────────────────────────
+const STEPS = [
+  {
+    icon: <Building2 size={18} />,
+    label: "Cadastre sua empresa",
+    description: "Adicione CNPJ, nome e dados cadastrais.",
+    href: "/secure/my-company",
+  },
+  {
+    icon: <CreditCard size={18} />,
+    label: "Crie uma conta bancária",
+    description: "Vincule sua conta corrente ou poupança.",
+    href: "/secure/accounts",
+  },
+  {
+    icon: <Users size={18} />,
+    label: "Adicione contatos",
+    description: "Clientes e fornecedores para uso nas transações.",
+    href: "/secure/contacts",
+  },
+  {
+    icon: <FileText size={18} />,
+    label: "Suba seu primeiro documento",
+    description: "NFe, DAS ou qualquer documento fiscal.",
+    href: "/secure/documents",
+  },
+  {
+    icon: <BarChart3 size={18} />,
+    label: "Registre uma transação",
+    description: "Receita ou despesa para ver o dashboard em ação.",
+    href: "/secure/transactions",
+  },
+];
 
 export default function OnboardingPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const hasRun = useRef(false);
 
-  // Limpa dados temporários do fluxo de cadastro na primeira renderização
   useEffect(() => {
-    if (status === "loading") return;
     if (hasRun.current) return;
     hasRun.current = true;
     sessionStorage.removeItem("plan_id");
     sessionStorage.removeItem("plan_name");
-  }, [status]);
-
-  // ── Carregando sessão ──────────────────────────────────────────────────────
-  if (status === "loading") {
-    return (
-      <Box display="flex" alignItems="center" justifyContent="center" minHeight="60vh" gap={2} flexDirection="column">
-        <CircularProgress />
-        <Typography variant="body2" color="text.secondary">
-          Carregando...
-        </Typography>
-      </Box>
-    );
-  }
-
-  const planName = session?.planName ?? null;
-  const planLabel = planName ? (PLAN_LABELS[planName] ?? planName) : null;
-  const planColor = planName ? (PLAN_COLORS[planName] ?? "default") : "default";
-  const isNew = session?.isNewUser === true;
-  // hasCompany: true se o JWT já tem company (usuário antigo) OU se session.hasCompany
-  const hasCompany = !!(session?.hasCompany || session?.companyId);
-
-  const STEPS = [
-    {
-      icon: <Building2 size={18} />,
-      label: "Cadastre sua empresa",
-      description: hasCompany
-        ? "Empresa cadastrada com sucesso."
-        : "Adicione CNPJ, nome e dados cadastrais.",
-      href: "/secure/my-company",
-      done: hasCompany,
-    },
-    {
-      icon: <CreditCard size={18} />,
-      label: "Crie uma conta bancária",
-      description: "Vincule sua conta corrente ou poupança.",
-      href: "/secure/accounts",
-      done: false,
-    },
-    {
-      icon: <Users size={18} />,
-      label: "Adicione contatos",
-      description: "Clientes e fornecedores para uso nas transações.",
-      href: "/secure/contacts",
-      done: false,
-    },
-    {
-      icon: <FileText size={18} />,
-      label: "Suba seu primeiro documento",
-      description: "NFe, DAS ou qualquer documento fiscal.",
-      href: "/secure/documents",
-      done: false,
-    },
-    {
-      icon: <BarChart3 size={18} />,
-      label: "Registre uma transação",
-      description: "Receita ou despesa para ver o dashboard em ação.",
-      href: "/secure/transactions",
-      done: false,
-    },
-  ];
+  }, []);
 
   return (
     <Container>
@@ -134,61 +84,35 @@ export default function OnboardingPage() {
       <Paper
         elevation={0}
         sx={{
-          p: 3, mt: 3,
-          bgcolor: isNew ? "success.50" : "primary.50",
+          p: 3,
+          mt: 3,
+          bgcolor: "primary.50",
           border: "1px solid",
-          borderColor: isNew ? "success.200" : "primary.200",
+          borderColor: "primary.200",
         }}
       >
         <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
-          {isNew ? <PartyPopper size={24} className="text-green-500" /> : <Zap size={24} className="text-indigo-500" />}
+          <Zap size={24} className="text-indigo-500" />
           <Box flex={1} minWidth={200}>
             <Typography variant="h6" fontWeight={700}>
-              {isNew ? "Conta criada com sucesso! 🎉" : "Bem-vindo ao Crivo!"}
+              Bem-vindo ao Crivo!
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {isNew
-                ? !hasCompany
-                  ? "Seu acesso está ativo. Cadastre sua empresa para começar a usar a plataforma."
-                  : "Seu ambiente está configurado. Explore os próximos passos abaixo."
-                : "Siga os passos abaixo para configurar sua conta e tirar o máximo da plataforma."}
+              Siga os passos abaixo para configurar sua conta e tirar o máximo
+              da plataforma.
             </Typography>
           </Box>
-          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-            {planLabel && (
-              <Chip label={`Plano ${planLabel} — 1 dia grátis`} color={planColor} size="small" />
-            )}
-            {isNew && (
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                endIcon={<ArrowRight size={14} />}
-                onClick={() => router.replace("/secure/dashboard")}
-              >
-                Ir para o Dashboard
-              </Button>
-            )}
-          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            endIcon={<ArrowRight size={14} />}
+            onClick={() => router.replace("/secure/dashboard")}
+          >
+            Ir para o Dashboard
+          </Button>
         </Box>
       </Paper>
-
-      {/* Alerta para novo usuário sem empresa */}
-      {isNew && !hasCompany && (
-        <Alert
-          severity="warning"
-          sx={{ mt: 2 }}
-          action={
-            <Link href="/secure/my-company">
-              <Button color="inherit" size="small" endIcon={<ArrowRight size={14} />}>
-                Cadastrar agora
-              </Button>
-            </Link>
-          }
-        >
-          <strong>Primeiro passo:</strong> Cadastre sua empresa para desbloquear todas as funcionalidades da plataforma.
-        </Alert>
-      )}
 
       <Box
         sx={{
@@ -214,25 +138,22 @@ export default function OnboardingPage() {
                   sx={{ py: 1 }}
                   secondaryAction={
                     <Link href={step.href} passHref>
-                      <Button size="small" endIcon={<ArrowRight size={14} />} variant="text">
+                      <Button
+                        size="small"
+                        endIcon={<ArrowRight size={14} />}
+                        variant="text"
+                      >
                         Ir
                       </Button>
                     </Link>
                   }
                 >
-                  <ListItemIcon sx={{ minWidth: 36, color: step.done ? "success.main" : "text.secondary" }}>
-                    {step.done ? <CheckCircle size={18} /> : step.icon}
+                  <ListItemIcon sx={{ minWidth: 36, color: "text.secondary" }}>
+                    {step.icon}
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      <Typography
-                        variant="body2"
-                        fontWeight={600}
-                        sx={{
-                          textDecoration: step.done ? "line-through" : "none",
-                          color: step.done ? "text.disabled" : "text.primary",
-                        }}
-                      >
+                      <Typography variant="body2" fontWeight={600}>
                         {step.label}
                       </Typography>
                     }
@@ -257,7 +178,8 @@ export default function OnboardingPage() {
               🎬 Como usar o Crivo
             </Typography>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              Em breve, um vídeo completo explicando como aproveitar ao máximo a plataforma.
+              Em breve, um vídeo completo explicando como aproveitar ao máximo a
+              plataforma.
             </Typography>
             <Box
               sx={{
@@ -282,17 +204,6 @@ export default function OnboardingPage() {
               </Typography>
             </Box>
           </Paper>
-
-          {/* Dica do plano */}
-          <Alert severity="info" variant="outlined">
-            <Typography variant="body2">
-              <strong>Plano {planLabel ?? "atual"}:</strong> Você tem acesso a todos os recursos
-              do seu plano. Para expandir seus limites,{" "}
-              <Link href="/secure/plans" style={{ color: "inherit", fontWeight: 600 }}>
-                veja os planos disponíveis
-              </Link>.
-            </Typography>
-          </Alert>
 
           {/* Ações rápidas */}
           <Paper elevation={2} sx={{ p: 3 }}>
@@ -320,6 +231,19 @@ export default function OnboardingPage() {
               ))}
             </Box>
           </Paper>
+
+          <Alert severity="info" variant="outlined">
+            <Typography variant="body2">
+              Para expandir seus limites,{" "}
+              <Link
+                href="/secure/plans"
+                style={{ color: "inherit", fontWeight: 600 }}
+              >
+                veja os planos disponíveis
+              </Link>
+              .
+            </Typography>
+          </Alert>
         </Box>
       </Box>
     </Container>

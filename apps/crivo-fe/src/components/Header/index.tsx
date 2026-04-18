@@ -7,7 +7,7 @@ import { Menu, Zap } from "lucide-react";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { DEFAULT_ROUTES } from "@/routes";
 
-import { signIn } from "next-auth/react";
+import Link from "next/link";
 
 import { Logo } from "../Logo";
 import { MobileDrawer } from "../MobileDrawer";
@@ -59,20 +59,12 @@ export const Header = ({
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-12">
             <Navbar routes={routes} activeHref={activeHref} />
-            {/* <Link
+            <Link
               href={loginHref}
               className="text-sm font-bold p-2 rounded-sm bg-indigo-500 text-white/60 hover:text-white transition-colors"
             >
               {loginLabel}
-            </Link> */}
-            <button
-              onClick={() =>
-                signIn("keycloak", { callbackUrl: "/secure/dashboard" })
-              }
-              className="text-sm font-bold p-2 rounded-sm bg-indigo-500 text-white/60 hover:text-white transition-colors"
-            >
-              {loginLabel}
-            </button>
+            </Link>
           </div>
 
           {/* Mobile hamburger */}
