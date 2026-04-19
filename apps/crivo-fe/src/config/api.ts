@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 
 import { env } from "./env";
 
@@ -9,9 +9,12 @@ const api = axios.create({
 
 api.interceptors.request.use(async (config) => {
   if (typeof window !== "undefined") {
-    const session = await getSession();
-    if (session?.accessToken) {
-      config.headers.Authorization = `Bearer ${session.accessToken}`;
+    const { data: session } = await authClient.getSession();
+    const accessToken = (session as Record<string, unknown>)?.accessToken as
+      | string
+      | undefined;
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
   }
   return config;
