@@ -10,14 +10,6 @@ import { Role } from '../../../domain/enums/user.role.enum';
 
 export class CreateUserDto {
   @ApiProperty({
-    description: 'ID do Keycloak',
-    example: 'kc-uuid-1234',
-  })
-  @IsString()
-  @IsNotEmpty()
-  keycloakId: string;
-
-  @ApiProperty({
     description: 'Email do usuário',
     example: 'usuario@empresa.com',
   })

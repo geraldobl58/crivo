@@ -44,10 +44,10 @@ async function main() {
     {
       type: 'TRIAL' as const,
       name: 'Trial',
-      description: 'Período de teste gratuito — 1 dia',
+      description: 'Teste grátis por tempo limitado, sem compromisso',
       priceMonthly: 0,
       trialDays: 1,
-      maxUsers: 1,
+      maxUsers: 5,
       maxCompany: 1,
       maxTransactions: 100,
       maxContacts: 50,
@@ -57,10 +57,10 @@ async function main() {
     {
       type: 'BASIC' as const,
       name: 'Basic',
-      description: 'Plano básico — 1 empresa, CRUD de usuários',
+      description: 'Para profissionais autônomos e pequenos escritórios',
       priceMonthly: 29900,
       trialDays: 0,
-      maxUsers: 1,
+      maxUsers: 5,
       maxCompany: 1,
       maxTransactions: 1000,
       maxContacts: 500,
@@ -70,10 +70,10 @@ async function main() {
     {
       type: 'PROFESSIONAL' as const,
       name: 'Professional',
-      description: 'Plano profissional — até 3 empresas, CRUD de usuários',
+      description: 'Para escritórios em crescimento com múltiplas empresas',
       priceMonthly: 39900,
       trialDays: 0,
-      maxUsers: 3,
+      maxUsers: 5,
       maxCompany: 3,
       maxTransactions: 10000,
       maxContacts: 5000,
@@ -83,7 +83,8 @@ async function main() {
     {
       type: 'ENTERPRISE' as const,
       name: 'Enterprise',
-      description: 'Plano empresarial — empresas ilimitadas, consultar preço',
+      description:
+        'Solução completa para grandes escritórios e redes contábeis',
       priceMonthly: 99900,
       trialDays: 0,
       maxUsers: -1,

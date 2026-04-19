@@ -95,8 +95,8 @@ export class CreateCheckoutSessionUseCase {
     const session = await this.stripe.createCheckoutSession({
       customerId: stripeCustomerId as string,
       priceId: plan.stripePriceId,
-      successUrl: `${frontendUrl}/dashboard?checkout=success`,
-      cancelUrl: `${frontendUrl}/plans`,
+      successUrl: `${frontendUrl}/secure/dashboard?checkout=success`,
+      cancelUrl: `${frontendUrl}/secure/dashboard?checkout=canceled`,
       metadata: {
         companyId,
         planType,

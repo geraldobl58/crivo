@@ -6,18 +6,19 @@ Plataforma SaaS multi-tenant para gestão contábil com autenticação via Keycl
 
 ## Stack
 
-| Camada         | Tecnologia                                 |
-| -------------- | ------------------------------------------ |
-| Monorepo       | Turborepo + npm workspaces                 |
-| Backend        | NestJS 11 · Prisma 7 · PostgreSQL 16       |
-| Frontend       | Next.js 16 · React 19 · Tailwind CSS 4     |
-| Autenticação   | Keycloak 26 — OpenID Connect (JWT RS256)   |
-| Pagamentos     | Stripe (subscriptions + webhooks + portal) |
-| Email          | Nodemailer (Mailtrap em dev)               |
-| API Gateway    | Kong 3.9 (DB-less / declarativo)           |
-| Logs           | Pino (pino-pretty em dev)                  |
-| Documentação   | Swagger (OpenAPI) em `/docs`               |
-| Infraestrutura | Docker Compose                             |
+| Camada          | Tecnologia                                        |
+| --------------- | ------------------------------------------------- |
+| Monorepo        | Turborepo + npm workspaces                        |
+| Backend         | NestJS 11 · Prisma 7 · PostgreSQL 16              |
+| Frontend        | Next.js 16 · React 19 · MUI 7 · Tailwind CSS 4    |
+| Auth (Frontend) | NextAuth v5 (beta) — Keycloak provider, PKCE S256 |
+| Auth (Backend)  | Keycloak 26 — OpenID Connect (JWT RS256 via JWKS) |
+| Pagamentos      | Stripe (subscriptions + webhooks + portal)        |
+| Email           | Nodemailer (Mailtrap em dev)                      |
+| API Gateway     | Kong 3.9 (DB-less / declarativo)                  |
+| Logs            | Pino (pino-pretty em dev)                         |
+| Documentação    | Swagger (OpenAPI) em `/docs`                      |
+| Infraestrutura  | Docker Compose                                    |
 
 ---
 
@@ -85,7 +86,7 @@ npm run dev
 | -------------- | ------------------------------------- |
 | Frontend       | `http://localhost:3000`               |
 | API (via Kong) | `http://localhost:8000/api`           |
-| API (direto)   | `http://localhost:8000`               |
+| API (direto)   | `http://localhost:3333`               |
 | Swagger        | `http://localhost:8000/docs`          |
 | Keycloak Admin | `http://localhost:8080` (admin/admin) |
 | Kong Admin API | `http://localhost:8001`               |
@@ -96,23 +97,25 @@ npm run dev
 
 ## Planos e Limites
 
-| Plano        | Preço/mês    | Trial | Max Usuários | Max Empresas |
-| ------------ | ------------ | ----- | ------------ | ------------ |
-| TRIAL        | Gratuito     | 1 dia | 1            | 1            |
-| BASIC        | R$ 19,90     | —     | 1            | 1            |
-| PROFESSIONAL | R$ 49,90     | —     | 3            | 3            |
-| ENTERPRISE   | Sob consulta | —     | Ilimitado    | Ilimitado    |
+| Plano        | Preço/mês | Trial | Max Usuários | Max Empresas |
+| ------------ | --------- | ----- | ------------ | ------------ |
+| TRIAL        | Gratuito  | 1 dia | 1            | 1            |
+| BASIC        | R$ 299,00 | —     | 1            | 1            |
+| PROFESSIONAL | R$ 399,00 | —     | 3            | 3            |
+| ENTERPRISE   | R$ 999,00 | —     | Ilimitado    | Ilimitado    |
+
+> Preços em centavos no seed: 0 / 29900 / 39900 / 99900
 
 ---
 
 ## Papéis de Acesso (Roles)
 
-| Role      | Cria usuário | Edita empresa | Leitura geral |
-| --------- | ------------ | ------------- | ------------- |
-| `OWNER`   | ✅           | ✅            | ✅            |
-| `ADMIN`   | ✅           | ✅            | ✅            |
-| `USER`    | ❌           | ❌            | ✅            |
-| `SUPPORT` | ✅           | ✅            | ✅            |
+| Role      | Cria usuário | Edita empresa | Leitura geral | Admin Dashboard |
+| --------- | ------------ | ------------- | ------------- | --------------- |
+| `OWNER`   | ✅           | ✅            | ✅            | ❌              |
+| `ADMIN`   | ✅           | ✅            | ✅            | ❌              |
+| `USER`    | ❌           | ❌            | ✅            | ❌              |
+| `SUPPORT` | ✅           | ✅            | ✅            | ✅              |
 
 ---
 
@@ -134,16 +137,27 @@ npm run check-types  # Checagem de tipos em todos os apps
 
 API NestJS multi-tenant com:
 
-- Autenticação via Keycloak (JWT RS256 / JWKS)
-- CRUD de empresas, usuários e planos
+- Autenticação via Keycloak (JWT RS256 / JWKS) com JIT Provisioning
+- CRUD de empresas, usuários e planos (tenant-scoped)
 - Integração Stripe (checkout, webhooks, portal do cliente)
-- Email transacional (5 templates)
-- Dashboard admin (métricas, impersonação)
-- Guards de tenant isolation, ownership e limites de plano
+- Email transacional (5 templates: boas-vindas, pagamento, falha, cancelamento, trial)
+- Dashboard admin (métricas, listagem, impersonação via Token Exchange)
+- Guards: tenant isolation, ownership, limites de plano, roles, throttler
 
 ### [`crivo-fe`](apps/crivo-fe/) — Frontend
 
-Aplicação Next.js 16 com React 19 e Tailwind CSS 4.
+Aplicação Next.js 16 com React 19, MUI 7 e Tailwind CSS 4:
+
+- **NextAuth v5** — Keycloak provider com PKCE S256, refresh token rotation
+- **Server Actions** — `serverFetch()` bypassa Kong e chama NestJS direto
+- **Dashboard** — Cards de assinatura/empresa, limites do plano, checkout polling
+- **CRUD Empresas** — Listagem paginada, busca, criação, edição, deleção
+- **CRUD Usuários** — Listagem com filtros, chips de role, paginação server-side
+- **Onboarding** — Seleção de plano inline + formulário de empresa → Stripe Checkout
+- **Planos** — Comparação, upgrade/downgrade via Stripe Checkout/Portal
+- **Feature-based architecture** — `features/{domain}/{schemas,types,actions,hooks,components}`
+
+> Docs: [`apps/crivo-fe/docs/NEXT-STEPS.md`](apps/crivo-fe/docs/NEXT-STEPS.md) · [`apps/crivo-fe/docs/PLAN-AUTH-FLOW.md`](apps/crivo-fe/docs/PLAN-AUTH-FLOW.md)
 
 ### [`crivo-auth`](apps/crivo-auth/) — Tema Keycloak
 
@@ -155,11 +169,32 @@ Tema customizado de login para o Keycloak com Tailwind CSS. Hot-reload habilitad
 
 Configuração declarativa (DB-less) em [`kong/kong.yml`](kong/kong.yml):
 
+```
+Frontend / Apps  ──→  Kong :8000  ─┬─→  /api/*   ─→  NestJS :3333
+                                   ├─→  /docs    ─→  NestJS :3333
+                                   └─→  /auth/*  ─→  Keycloak :8080
+```
+
 - **Rate limiting** — 120 req/min por IP (1000/min para webhook do Stripe)
 - **CORS** — Centralizado no gateway
 - **Request size limit** — 50 MB
 - **Correlation ID** — `X-Request-Id` em todos os requests
-- **Proxy** — Rotas `/api` → Backend, `/auth` → Keycloak
+- **Security headers** — X-Frame-Options, X-Content-Type-Options, bot detection
+
+---
+
+## Jornada do Usuário
+
+```
+1. Landing page → Escolhe plano → Clica "Começar"
+2. Redirect → Keycloak (registro/login)
+3. Callback NextAuth → JWT + sessão
+4. POST /onboarding/setup-company → Cria empresa + subscription + Stripe Customer
+5. Redirect → Stripe Checkout (pagamento)
+6. Webhook → Subscription ACTIVE → email de boas-vindas
+7. Dashboard → CRUD users/companies (tenant-scoped)
+8. Upgrade/cancelamento via Stripe Customer Portal
+```
 
 ---
 

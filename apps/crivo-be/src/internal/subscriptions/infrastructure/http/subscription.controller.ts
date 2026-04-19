@@ -21,12 +21,16 @@ import {
 import { GetInvoicesQueryDto } from './dtos/get-invoices.query.dto';
 import { ErrorResponseDto } from '../../../../libs/http/dtos/error-response.dto';
 
-import { TenantInterceptor } from '../../../../libs/tenant/tenant.interceptor';
+import {
+  TenantInterceptor,
+  AllowExpiredTrial,
+} from '../../../../libs/tenant/tenant.interceptor';
 import { Tenant } from '../../../../libs/tenant/tenant.decorator';
 
 @ApiTags('Assinaturas')
 @ApiBearerAuth()
 @UseInterceptors(TenantInterceptor)
+@AllowExpiredTrial()
 @Controller('subscriptions')
 export class SubscriptionController {
   constructor(

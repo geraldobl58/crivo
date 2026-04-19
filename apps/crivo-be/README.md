@@ -256,12 +256,12 @@ A impersonação usa **Keycloak Token Exchange** (RFC 8693) — requer configura
 
 ## Planos e Limites
 
-| Plano        | Preço/mês    | Trial | Max Usuários | Max Empresas |
-| ------------ | ------------ | ----- | ------------ | ------------ |
-| TRIAL        | Gratuito     | 1 dia | 1            | 1            |
-| BASIC        | R$ 19,90     | —     | 1            | 1            |
-| PROFESSIONAL | R$ 49,90     | —     | 3            | 3            |
-| ENTERPRISE   | Sob consulta | —     | Ilimitado    | Ilimitado    |
+| Plano        | Preço/mês | Trial | Max Usuários | Max Empresas |
+| ------------ | --------- | ----- | ------------ | ------------ |
+| TRIAL        | Gratuito  | 1 dia | 1            | 1            |
+| BASIC        | R$ 299,00 | —     | 1            | 1            |
+| PROFESSIONAL | R$ 399,00 | —     | 3            | 3            |
+| ENTERPRISE   | R$ 999,00 | —     | Ilimitado    | Ilimitado    |
 
 O `PlanLimitGuard` impede criação de usuários ou sub-empresas acima do limite do plano ativo.
 

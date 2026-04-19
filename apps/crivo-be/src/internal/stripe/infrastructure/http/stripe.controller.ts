@@ -28,7 +28,10 @@ import { CheckoutSessionResponseDto } from './dtos/checkout-session-response.dto
 import { PortalSessionResponseDto } from './dtos/portal-session-response.dto';
 import { ErrorResponseDto } from '../../../../libs/http/dtos/error-response.dto';
 import { Public } from '../../../../libs/auth/public.decorator';
-import { TenantInterceptor } from '../../../../libs/tenant/tenant.interceptor';
+import {
+  TenantInterceptor,
+  AllowExpiredTrial,
+} from '../../../../libs/tenant/tenant.interceptor';
 import { Tenant } from '../../../../libs/tenant/tenant.decorator';
 import type { TenantContext } from '../../../../libs/tenant/tenant.context';
 
@@ -43,6 +46,7 @@ export class StripeController {
 
   @Post('checkout')
   @UseInterceptors(TenantInterceptor)
+  @AllowExpiredTrial()
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiOperation({
@@ -80,6 +84,7 @@ export class StripeController {
 
   @Post('portal')
   @UseInterceptors(TenantInterceptor)
+  @AllowExpiredTrial()
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiOperation({

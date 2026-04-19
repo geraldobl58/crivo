@@ -36,6 +36,8 @@ import { GetUserByIdUseCase } from '../../application/use-cases/get-user-by-id.u
 import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-case';
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
 
+import { KeycloakAdminService } from '../../../../libs/keycloak/keycloak-admin.service';
+
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { GetUsersQueryDto } from './dtos/get-user.query.dto';
@@ -63,6 +65,7 @@ export class UserController {
     private readonly getUserById: GetUserByIdUseCase,
     private readonly updateUser: UpdateUserUseCase,
     private readonly deleteUser: DeleteUserUseCase,
+    private readonly keycloakAdmin: KeycloakAdminService,
   ) {}
 
   @Post()
@@ -107,7 +110,17 @@ export class UserController {
     @Body() dto: CreateUserDto,
     @Tenant('companyId') companyId: string,
   ) {
-    return this.createUser.execute({ ...dto, companyId });
+    const tempPassword = Math.random().toString(36).slice(2) + 'A1!';
+
+    const { keycloakId } = await this.keycloakAdmin.createUser({
+      email: dto.email,
+      firstName: dto.firstname,
+      lastName: dto.lastname,
+      password: tempPassword,
+      temporary: true,
+    });
+
+    return this.createUser.execute({ ...dto, keycloakId, companyId });
   }
 
   @Get()
@@ -219,6 +232,8 @@ export class UserController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(RolesGuard)
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Remover usuário da empresa' })
   @ApiNoContentResponse({ description: 'Usuário removido com sucesso' })
   @ApiBadRequestResponse({
@@ -248,7 +263,8 @@ export class UserController {
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Tenant('companyId') companyId: string,
+    @Tenant('userId') currentUserId: string,
   ) {
-    return this.deleteUser.execute(id, companyId);
+    return this.deleteUser.execute(id, companyId, currentUserId);
   }
 }

@@ -19,7 +19,7 @@ export interface OnboardCompanyInput {
 export interface OnboardCompanyResult {
   company: { id: string; name: string };
   subscription: { id: string; status: string };
-  checkoutUrl: string;
+  checkoutUrl: string | null;
 }
 
 @Injectable()
@@ -63,6 +63,11 @@ export class OnboardCompanyUseCase {
       throw new BadRequestException(
         `Plan type "${input.planType}" is currently unavailable`,
       );
+    }
+
+    // TRIAL plans: skip Stripe, create subscription as TRIALING with 5-min trial
+    if (input.planType === 'TRIAL') {
+      return this.handleTrialOnboarding(user, plan, input.companyName);
     }
 
     if (!plan.stripePriceId) {
@@ -144,8 +149,8 @@ export class OnboardCompanyUseCase {
       const session = await this.stripe.createCheckoutSession({
         customerId: stripeCustomer.id,
         priceId: plan.stripePriceId,
-        successUrl: `${frontendUrl}/dashboard?checkout=success`,
-        cancelUrl: `${frontendUrl}/plans?checkout=canceled`,
+        successUrl: `${frontendUrl}/secure/dashboard?checkout=success`,
+        cancelUrl: `${frontendUrl}/secure/onboarding?checkout=canceled`,
         metadata: {
           companyId: company.id,
           planType: input.planType,
@@ -192,6 +197,62 @@ export class OnboardCompanyUseCase {
       company: { id: company.id, name: company.name },
       subscription: { id: subscription.id, status: subscription.status },
       checkoutUrl,
+    };
+  }
+
+  /**
+   * Trial onboarding: skip Stripe, create company + subscription as TRIALING
+   * with a 5-minute trial period for testing.
+   */
+  private async handleTrialOnboarding(
+    user: { id: string; email: string },
+    plan: { id: string },
+    companyName: string,
+  ): Promise<OnboardCompanyResult> {
+    const TRIAL_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + TRIAL_DURATION_MS);
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const newCompany = await tx.company.create({
+        data: { name: companyName },
+      });
+
+      const newSubscription = await tx.subscription.create({
+        data: {
+          companyId: newCompany.id,
+          planId: plan.id,
+          status: 'TRIALING',
+          trialStart: now,
+          trialEnd,
+          currentPeriodStart: now,
+          currentPeriodEnd: trialEnd,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          companyId: newCompany.id,
+          role: 'OWNER',
+          pendingPlanType: null,
+        },
+      });
+
+      return { company: newCompany, subscription: newSubscription };
+    });
+
+    this.logger.log(
+      `Trial onboarding completed for user ${user.id} → company ${result.company.id} (trial ends: ${trialEnd.toISOString()})`,
+    );
+
+    return {
+      company: { id: result.company.id, name: result.company.name },
+      subscription: {
+        id: result.subscription.id,
+        status: result.subscription.status,
+      },
+      checkoutUrl: null,
     };
   }
 }

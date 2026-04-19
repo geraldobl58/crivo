@@ -15,7 +15,17 @@ export class DeleteUserUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(id: string, companyId?: string): Promise<void> {
+  async execute(
+    id: string,
+    companyId?: string,
+    currentUserId?: string,
+  ): Promise<void> {
+    if (currentUserId && id === currentUserId) {
+      throw new ForbiddenException(
+        'Não é permitido remover o próprio usuário logado',
+      );
+    }
+
     const existing = await this.userRepository.findById(id);
 
     if (!existing) {
@@ -25,6 +35,12 @@ export class DeleteUserUseCase {
     if (companyId && existing.companyId !== companyId) {
       throw new ForbiddenException(
         'Acesso negado: usuário não pertence à sua organização',
+      );
+    }
+
+    if (existing.role === 'OWNER') {
+      throw new ForbiddenException(
+        'Não é permitido remover o proprietário da conta',
       );
     }
 

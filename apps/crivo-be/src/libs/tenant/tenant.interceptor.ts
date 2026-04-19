@@ -4,7 +4,10 @@ import {
   ExecutionContext,
   CallHandler,
   UnauthorizedException,
+  ForbiddenException,
+  SetMetadata,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import type { Request } from 'express';
 import type { PlanType } from '@prisma/client';
@@ -13,9 +16,15 @@ import type { TenantContext } from './tenant.context';
 import type { JwtPayload } from '../auth/jwt.strategy';
 import { tenantStorage } from './tenant.storage';
 
+export const ALLOW_EXPIRED_TRIAL = 'ALLOW_EXPIRED_TRIAL';
+export const AllowExpiredTrial = () => SetMetadata(ALLOW_EXPIRED_TRIAL, true);
+
 @Injectable()
 export class TenantInterceptor implements NestInterceptor {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly reflector: Reflector,
+  ) {}
 
   async intercept(
     context: ExecutionContext,
@@ -54,7 +63,27 @@ export class TenantInterceptor implements NestInterceptor {
       );
     }
 
-    const planType: PlanType = user.company.subscription?.plan?.type ?? 'TRIAL';
+    const subscription = user.company.subscription;
+    const planType: PlanType = subscription?.plan?.type ?? 'TRIAL';
+
+    // Block expired trial users (unless endpoint opts out)
+    const allowExpired = this.reflector.getAllAndOverride<boolean>(
+      ALLOW_EXPIRED_TRIAL,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (
+      !allowExpired &&
+      subscription?.status === 'TRIALING' &&
+      subscription?.trialEnd &&
+      new Date(subscription.trialEnd) < new Date()
+    ) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'Seu período de teste expirou. Faça upgrade para continuar.',
+        error: 'TRIAL_EXPIRED',
+      });
+    }
 
     const tenantContext: TenantContext = {
       companyId: user.companyId!,

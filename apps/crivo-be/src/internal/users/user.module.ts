@@ -12,8 +12,10 @@ import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case'
 import { UserController } from './infrastructure/http/user.controller';
 import { PlanLimitGuard } from '../../libs/guards/plan-limit.guard';
 import { RolesGuard } from '../../libs/guards/roles.guard';
+import { KeycloakAdminModule } from '../../libs/keycloak/keycloak-admin.module';
 
 @Module({
+  imports: [KeycloakAdminModule],
   controllers: [UserController],
   providers: [
     {

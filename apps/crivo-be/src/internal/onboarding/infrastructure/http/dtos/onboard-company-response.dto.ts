@@ -36,8 +36,10 @@ export class OnboardCompanyResponseDto {
   subscription: SetupSubscriptionResponse;
 
   @ApiProperty({
-    description: 'URL do Stripe Checkout para completar o pagamento',
+    description:
+      'URL do Stripe Checkout para completar o pagamento (null para plano Trial)',
     example: 'https://checkout.stripe.com/pay/cs_test_...',
+    nullable: true,
   })
-  checkoutUrl: string;
+  checkoutUrl: string | null;
 }
