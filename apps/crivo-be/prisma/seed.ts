@@ -21,6 +21,19 @@ async function main() {
   console.log('🧹 Cleaning existing data...\n');
 
   try {
+    // Limpa tabelas do Better Auth (auth_*) — gerenciadas via raw SQL pois não são modelos Prisma
+    await pool.query('DELETE FROM auth_account');
+    await pool.query('DELETE FROM auth_session');
+    await pool.query('DELETE FROM auth_verification');
+    await pool.query('DELETE FROM auth_user');
+    console.log(
+      '  ✅ Better Auth tables cleared (auth_account, auth_session, auth_user, auth_verification)',
+    );
+  } catch {
+    console.log('  ⚠️  Better Auth tables not found — skipping (first run?)');
+  }
+
+  try {
     // Limpa self-referential FK antes de deletar companies
     await prisma.company.updateMany({ data: { parentCompanyId: null } });
 
@@ -31,7 +44,7 @@ async function main() {
     await prisma.company.deleteMany();
     await prisma.plan.deleteMany();
 
-    console.log('  ✅ All data cleared\n');
+    console.log('  ✅ All app data cleared\n');
   } catch {
     console.log('  ⚠️  Tables not found — skipping cleanup (first run?)\n');
   }
