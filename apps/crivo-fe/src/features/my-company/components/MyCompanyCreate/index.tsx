@@ -28,7 +28,7 @@ export const MyCompanyCreate = ({ onSuccess }: MyCompanyCreateProps) => {
     resolver: zodResolver(CreateCompanyRequestSchema),
     defaultValues: {
       name: "",
-      tax_id: "",
+      taxId: "",
     },
   });
 
@@ -71,7 +71,7 @@ export const MyCompanyCreate = ({ onSuccess }: MyCompanyCreateProps) => {
       />
 
       <Controller
-        name="tax_id"
+        name="taxId"
         control={control}
         render={({ field }) => (
           <TextField
@@ -79,8 +79,8 @@ export const MyCompanyCreate = ({ onSuccess }: MyCompanyCreateProps) => {
             label="CNPJ (somente números)"
             fullWidth
             slotProps={{ htmlInput: { maxLength: 14 } }}
-            error={!!errors.tax_id}
-            helperText={errors.tax_id?.message ?? "Ex: 12345678000199"}
+            error={!!errors.taxId}
+            helperText={errors.taxId?.message ?? "Ex: 12345678000199"}
           />
         )}
       />
@@ -92,7 +92,9 @@ export const MyCompanyCreate = ({ onSuccess }: MyCompanyCreateProps) => {
           variant="contained"
           color="primary"
           disabled={isSubmitting}
-          startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : null}
+          startIcon={
+            isSubmitting ? <CircularProgress size={16} color="inherit" /> : null
+          }
         >
           {isSubmitting ? "Criando..." : "Criar Empresa"}
         </Button>
