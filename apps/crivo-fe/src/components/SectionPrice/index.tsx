@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 
 import { Card } from "../Card";
 import { FeatureList } from "../FeatureList";
@@ -43,7 +43,11 @@ export const SectionPrice = () => {
     setSigningIn(plan.type);
     savePlanSelection(plan.type, plan.id);
     try {
-      await signIn("keycloak", { callbackUrl: "/secure/onboarding" });
+      await authClient.signIn.oauth2({
+        providerId: "keycloak",
+        callbackURL: "/secure/onboarding",
+        errorCallbackURL: "/auth/error",
+      });
     } catch {
       setSigningIn(null);
     }
