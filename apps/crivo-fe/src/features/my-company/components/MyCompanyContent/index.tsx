@@ -72,13 +72,13 @@ export const MyCompanyContent = () => {
     formState: { errors: editErrors },
   } = useForm<UpdateCompanyRequest>({
     resolver: zodResolver(UpdateCompanyRequestSchema),
-    defaultValues: { name: "", tax_id: "" },
+    defaultValues: { name: "", taxId: "" },
   });
 
   // Sync edit form when target changes
   useEffect(() => {
     if (editTarget) {
-      resetEdit({ name: editTarget.name, tax_id: editTarget.tax_id ?? "" });
+      resetEdit({ name: editTarget.name, taxId: editTarget.taxId ?? "" });
     }
   }, [editTarget, resetEdit]);
 
@@ -192,7 +192,7 @@ export const MyCompanyContent = () => {
               )}
             />
             <Controller
-              name="tax_id"
+              name="taxId"
               control={editControl}
               render={({ field }) => (
                 <TextField
@@ -200,10 +200,8 @@ export const MyCompanyContent = () => {
                   label="CNPJ (somente números)"
                   fullWidth
                   slotProps={{ htmlInput: { maxLength: 14 } }}
-                  error={!!editErrors.tax_id}
-                  helperText={
-                    editErrors.tax_id?.message ?? "Ex: 12345678000199"
-                  }
+                  error={!!editErrors.taxId}
+                  helperText={editErrors.taxId?.message ?? "Ex: 12345678000199"}
                 />
               )}
             />
