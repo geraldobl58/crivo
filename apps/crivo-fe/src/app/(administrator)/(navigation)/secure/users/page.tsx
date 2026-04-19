@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
@@ -48,7 +48,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function UsersPage() {
   const [open, setOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   // Edit state
   const [editTarget, setEditTarget] = useState<UserResponse | null>(null);
@@ -161,7 +161,7 @@ export default function UsersPage() {
       setDeleteTarget(row);
       setDeleteError(null);
     },
-    currentUserKeycloakId: session?.keycloakId,
+    currentUserKeycloakId: (session as any)?.keycloakId as string | undefined,
   });
 
   return (
