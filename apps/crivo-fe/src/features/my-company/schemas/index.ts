@@ -3,19 +3,19 @@ import z from "zod";
 export const CompanyResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  tax_id: z.string().optional().default(""), // CNPJ / CPF
-  created_at: z.string(),
-  updated_at: z.string(),
+  taxId: z.string().nullable().optional().default(""),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export type CompanyResponse = z.infer<typeof CompanyResponseSchema>;
 
 export const CompanyListResponseSchema = z.object({
-  data: z.array(CompanyResponseSchema),
+  items: z.array(CompanyResponseSchema),
   total: z.number(),
   page: z.number(),
   limit: z.number(),
-  total_pages: z.number(),
+  totalPages: z.number(),
 });
 
 export type CompanyListResponse = z.infer<typeof CompanyListResponseSchema>;
@@ -27,7 +27,7 @@ export type CompanyListResponse = z.infer<typeof CompanyListResponseSchema>;
  */
 export const CreateCompanyRequestSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
-  tax_id: z
+  taxId: z
     .string()
     .min(11, "CNPJ/CPF inválido")
     .max(18, "CNPJ/CPF inválido")
