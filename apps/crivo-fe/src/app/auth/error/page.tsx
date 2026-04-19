@@ -55,7 +55,7 @@ function AuthErrorContent() {
 
         <div className="flex flex-col gap-3 pt-2">
           <a
-            href="/api/auth/signin"
+            href="/auth/signin"
             className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-sm transition-colors"
           >
             Tentar Novamente
