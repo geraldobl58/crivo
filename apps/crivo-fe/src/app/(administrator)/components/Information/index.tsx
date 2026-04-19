@@ -2,11 +2,11 @@
 
 import { Avatar, Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { LogOut } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { clearPlanSelection } from "@/utils/plan-cookie";
 
 export const Information = () => {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const userName = session?.user?.name || session?.user?.email || "";
   const initials = userName
     .split(" ")
@@ -22,7 +22,9 @@ export const Information = () => {
     const postLogoutRedirectUri = encodeURIComponent(window.location.origin);
     const keycloakLogoutUrl = `${keycloakIssuer}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutRedirectUri}&client_id=crivo-web`;
 
-    signOut({ redirectTo: keycloakLogoutUrl });
+    authClient.signOut().then(() => {
+      window.location.href = keycloakLogoutUrl;
+    });
   };
 
   return (
