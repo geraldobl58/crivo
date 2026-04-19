@@ -20,19 +20,6 @@ export function buildColumns(
       flex: 1,
     },
     {
-      field: "tax_id",
-      headerName: "Documento",
-      flex: 1,
-      renderCell: (params) => {
-        const value = params.value as string;
-        const formattedValue = value.replace(
-          /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-          "$1.$2.$3/$4-$5",
-        );
-        return <span>{formattedValue}</span>;
-      },
-    },
-    {
       field: "actions",
       headerName: "Ações",
       flex: 1,
@@ -45,18 +32,8 @@ export function buildColumns(
           <IconButton size="small" onClick={() => actions.onDelete(params.row)}>
             <Trash size={16} className="text-error" />
           </IconButton>
-          <IconButton size="small" onClick={() => actions.onView(params.row)}>
-            <Eye size={16} className="text-primary" />
-          </IconButton>
         </>
       ),
     },
   ];
 }
-
-/** @deprecated use buildColumns(actions) */
-export const columns = buildColumns({
-  onEdit: () => {},
-  onDelete: () => {},
-  onView: () => {},
-});
