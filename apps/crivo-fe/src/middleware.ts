@@ -1,12 +1,19 @@
-import { auth } from "@/config/auth";
-import { NextResponse } from "next/server";
+import { betterFetch } from "@better-fetch/fetch";
+import { NextRequest, NextResponse } from "next/server";
 
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
 
-  // If not authenticated and accessing /secure/*, redirect to Keycloak login
-  if (!req.auth) {
-    const signInUrl = new URL("/api/auth/signin", nextUrl.origin);
+  const { data: session } = await betterFetch<Record<string, unknown>>(
+    "/api/auth/get-session",
+    {
+      baseURL: nextUrl.origin,
+      headers: { cookie: req.headers.get("cookie") ?? "" },
+    },
+  );
+
+  if (!session) {
+    const signInUrl = new URL("/auth/signin", nextUrl.origin);
     signInUrl.searchParams.set(
       "callbackUrl",
       nextUrl.pathname + nextUrl.search,
@@ -14,9 +21,11 @@ export default auth((req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  // If token refresh failed, force re-login
-  if (req.auth.error === "RefreshTokenError") {
-    const signInUrl = new URL("/api/auth/signin", nextUrl.origin);
+  const accessToken = session?.accessToken as string | undefined;
+
+  // Se o refresh do token Keycloak falhou (accessToken vazio), força novo login
+  if (accessToken === "") {
+    const signInUrl = new URL("/auth/signin", nextUrl.origin);
     signInUrl.searchParams.set(
       "callbackUrl",
       nextUrl.pathname + nextUrl.search,
@@ -25,7 +34,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/secure/:path*"],
