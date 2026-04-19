@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -260,7 +260,12 @@ function PlanSelector({
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, isPending } = authClient.useSession();
+  const status = isPending
+    ? "loading"
+    : session
+      ? "authenticated"
+      : "unauthenticated";
   const { isLoading, error, setupCompany } = useSetupCompany();
   const [, startTransition] = useTransition();
 
