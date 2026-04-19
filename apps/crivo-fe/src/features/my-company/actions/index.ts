@@ -1,13 +1,9 @@
 "use server";
 
-import {
-  createCompany,
-  deleteCompany,
-  getCompanies,
-  updateCompany,
-} from "../http";
+import { serverFetch } from "@/config/server-api";
 import {
   CompanyQueryParams,
+  CompanyListResponse,
   CompanyResponse,
   CreateCompanyRequest,
   UpdateCompanyRequest,
@@ -18,7 +14,13 @@ export async function getCompanyAction(
   params?: CompanyQueryParams,
 ): Promise<CompanyInfoResponse> {
   try {
-    const response = await getCompanies(params);
+    const response = await serverFetch<CompanyListResponse>("/companies", {
+      params: {
+        page: params?.page ?? 1,
+        limit: params?.limit ?? 10,
+        ...(params?.search ? { search: params.search } : {}),
+      },
+    });
     return {
       success: true,
       message: "Empresas recuperadas com sucesso.",
@@ -37,7 +39,10 @@ export async function createCompanyAction(
   body: CreateCompanyRequest,
 ): Promise<CompanyActionResponse<{ id: string }>> {
   try {
-    const data = await createCompany(body);
+    const data = await serverFetch<{ id: string }>("/companies", {
+      method: "POST",
+      body,
+    });
     return { success: true, data, message: "Empresa criada com sucesso." };
   } catch (error) {
     console.error("Erro ao criar empresa:", error);
@@ -53,7 +58,10 @@ export async function updateCompanyAction(
   body: UpdateCompanyRequest,
 ): Promise<CompanyActionResponse<CompanyResponse>> {
   try {
-    const data = await updateCompany(id, body);
+    const data = await serverFetch<CompanyResponse>(`/companies/${id}`, {
+      method: "PATCH",
+      body,
+    });
     return { success: true, data, message: "Empresa atualizada com sucesso." };
   } catch (error) {
     console.error("Erro ao atualizar empresa:", error);
@@ -68,7 +76,7 @@ export async function deleteCompanyAction(
   id: string,
 ): Promise<CompanyActionResponse<void>> {
   try {
-    await deleteCompany(id);
+    await serverFetch<void>(`/companies/${id}`, { method: "DELETE" });
     return { success: true, message: "Empresa removida com sucesso." };
   } catch (error) {
     console.error("Erro ao remover empresa:", error);
