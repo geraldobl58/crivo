@@ -1,5 +1,6 @@
 export const formatPrice = (cents: number) => {
-  if (cents <= 0) return "Sob consulta";
+  if (cents === 0) return "Grátis";
+  if (cents < 0) return "Sob consulta";
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
