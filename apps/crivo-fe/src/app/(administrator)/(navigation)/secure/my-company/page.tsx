@@ -1,11 +1,338 @@
-import { MyCompany } from "@/features/my-company/components/MyCompanyList";
+"use client";
 
-const MyCompanyPage = () => {
-  return (
-    <>
-      <MyCompany />
-    </>
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
+
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Building2 } from "lucide-react";
+
+import { Container } from "@/app/(administrator)/components/Container";
+import { TitleBar } from "@/app/(administrator)/components/TitleBar";
+import { DataTable } from "@/app/(administrator)/components/DataTable";
+import { ModalDialog } from "@/components/ModalDialog";
+
+import { MyCompanySearch } from "@/features/my-company/components/MyCompanySearch";
+import { buildColumns } from "@/features/my-company/components/MyCompanyList/Columns";
+import { MyCompanyCreate } from "@/features/my-company/components/MyCompanyCreate";
+
+import { useCompanies } from "@/features/my-company/hooks";
+import {
+  deleteCompanyAction,
+  updateCompanyAction,
+} from "@/features/my-company/actions";
+import {
+  CompanyQueryParams,
+  UpdateCompanyRequest,
+  UpdateCompanyRequestSchema,
+} from "@/features/my-company/schemas";
+import type { CompanyResponse } from "@/features/my-company/types";
+import { getDashboardDataAction } from "@/features/dashboard/actions";
+
+export default function MyCompanyPage() {
+  const [open, setOpen] = useState(false);
+
+  // Edit state
+  const [editTarget, setEditTarget] = useState<CompanyResponse | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState<CompanyResponse | null>(
+    null,
   );
-};
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
-export default MyCompanyPage;
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const {
+    rows,
+    total,
+    isLoading,
+    isFetching,
+    queryParams,
+    handleFilters,
+    handlePageChange,
+    handleLimitChange,
+    refetch,
+  } = useCompanies();
+
+  // Fetch plan limits for dynamic button
+  const { data: dashboardData } = useQuery({
+    queryKey: ["dashboard-plan-limits"],
+    queryFn: async () => {
+      const result = await getDashboardDataAction();
+      return result.success ? result.data : null;
+    },
+  });
+
+  const maxCompany = dashboardData?.subscription?.plan?.maxCompany ?? 1;
+  const currentCompanies = dashboardData?.usage?.companies ?? total;
+  const isUnlimited = maxCompany === -1;
+  const canCreateCompany = isUnlimited || currentCompanies < maxCompany;
+
+  // Edit form
+  const {
+    handleSubmit: handleEditSubmit,
+    control: editControl,
+    reset: resetEdit,
+    formState: { errors: editErrors },
+  } = useForm<UpdateCompanyRequest>({
+    resolver: zodResolver(UpdateCompanyRequestSchema),
+    defaultValues: { name: "", taxId: "" },
+  });
+
+  // Sync edit form when target changes
+  useEffect(() => {
+    if (editTarget) {
+      resetEdit({ name: editTarget.name, taxId: editTarget.taxId ?? "" });
+    }
+  }, [editTarget, resetEdit]);
+
+  // Sync filters/pagination to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (queryParams.page && queryParams.page > 1)
+      params.set("page", String(queryParams.page));
+    if (queryParams.limit && queryParams.limit !== 10)
+      params.set("limit", String(queryParams.limit));
+    if (queryParams.search) params.set("search", queryParams.search);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [queryParams, router, pathname]);
+
+  const handleSearch = (filters: Partial<CompanyQueryParams>) => {
+    handleFilters(filters);
+  };
+
+  // Edit submit
+  const onEditSubmit = async (data: UpdateCompanyRequest) => {
+    if (!editTarget) return;
+    setEditError(null);
+    setEditSubmitting(true);
+    try {
+      const result = await updateCompanyAction(editTarget.id, data);
+      if (!result.success) {
+        setEditError(result.message ?? "Erro ao atualizar empresa.");
+        return;
+      }
+      setEditTarget(null);
+      refetch();
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  // Delete confirm
+  const onDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleteError(null);
+    setDeleteSubmitting(true);
+    try {
+      const result = await deleteCompanyAction(deleteTarget.id);
+      if (!result.success) {
+        setDeleteError(result.message ?? "Erro ao remover empresa.");
+        return;
+      }
+      setDeleteTarget(null);
+      refetch();
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
+
+  const columns = buildColumns({
+    onEdit: (row) => setEditTarget(row),
+    onDelete: (row) => {
+      setDeleteTarget(row);
+      setDeleteError(null);
+    },
+    onView: (row) => router.push(`${pathname}/${row.id}`),
+  });
+
+  return (
+    <Container>
+      {/* Create modal */}
+      <ModalDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Novo Registro"
+        content={
+          <MyCompanyCreate
+            onSuccess={() => {
+              setOpen(false);
+              refetch();
+            }}
+          />
+        }
+      />
+
+      {/* Edit dialog */}
+      <Dialog
+        open={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <form onSubmit={handleEditSubmit(onEditSubmit)}>
+          <DialogTitle>Editar Empresa</DialogTitle>
+          <DialogContent
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              pt: "16px !important",
+            }}
+          >
+            {editError && <Alert severity="error">{editError}</Alert>}
+            <Controller
+              name="name"
+              control={editControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Nome da Empresa"
+                  fullWidth
+                  error={!!editErrors.name}
+                  helperText={editErrors.name?.message}
+                />
+              )}
+            />
+            <Controller
+              name="taxId"
+              control={editControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="CNPJ (somente números)"
+                  fullWidth
+                  slotProps={{ htmlInput: { maxLength: 14 } }}
+                  error={!!editErrors.taxId}
+                  helperText={editErrors.taxId?.message ?? "Ex: 12345678000199"}
+                />
+              )}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setEditTarget(null)}
+              disabled={editSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={editSubmitting}
+              startIcon={
+                editSubmitting ? (
+                  <CircularProgress size={14} color="inherit" />
+                ) : null
+              }
+            >
+              {editSubmitting ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+        <DialogTitle>Remover Empresa</DialogTitle>
+        <DialogContent>
+          {deleteError && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {deleteError}
+            </Alert>
+          )}
+          <DialogContentText>
+            Tem certeza que deseja remover <strong>{deleteTarget?.name}</strong>
+            ? Esta ação não pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteTarget(null)}
+            disabled={deleteSubmitting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={onDeleteConfirm}
+            color="error"
+            variant="contained"
+            disabled={deleteSubmitting}
+            startIcon={
+              deleteSubmitting ? (
+                <CircularProgress size={14} color="inherit" />
+              ) : null
+            }
+          >
+            {deleteSubmitting ? "Removendo..." : "Remover"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <TitleBar
+        title="Minha Empresa"
+        description="Gerencie as informações e configurações da sua empresa, incluindo dados cadastrais, usuários e preferências."
+        content={
+          <Tooltip
+            title="Limite de empresas atingido. Atualize seu plano para adicionar mais."
+            arrow
+            disableHoverListener={canCreateCompany}
+          >
+            <span>
+              <Button
+                variant="contained"
+                onClick={() => setOpen(true)}
+                disabled={!canCreateCompany}
+                startIcon={<Building2 size={16} />}
+              >
+                Novo Registro
+              </Button>
+            </span>
+          </Tooltip>
+        }
+      />
+
+      <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
+        <MyCompanySearch onSearch={handleSearch} isLoading={isLoading} />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowCount={total}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={{
+            page: (queryParams.page ?? 1) - 1,
+            pageSize: queryParams.limit ?? 10,
+          }}
+          onPaginationModelChange={(model) => {
+            if (model.pageSize !== (queryParams.limit ?? 10)) {
+              handleLimitChange(model.pageSize);
+            } else {
+              handlePageChange(model.page + 1);
+            }
+          }}
+          pageSizeOptions={[5, 10, 25]}
+        />
+      </Paper>
+    </Container>
+  );
+}
