@@ -114,13 +114,13 @@ describe("SectionPrice", () => {
     render(<SectionPrice />);
     await screen.findByText("Starter");
     expect(
-      screen.getByRole("link", { name: /Começar com o Starter/i }),
+      screen.getByRole("button", { name: /Começar com o Starter/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Assinar o Professional/i }),
+      screen.getByRole("button", { name: /Assinar o Professional/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Falar com Vendas/i }),
+      screen.getByRole("button", { name: /Falar com Vendas/i }),
     ).toBeInTheDocument();
   });
 
