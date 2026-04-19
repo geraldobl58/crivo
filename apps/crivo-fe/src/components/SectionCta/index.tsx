@@ -15,7 +15,7 @@ export const SectionCta = ({
   id,
   title = "Pronto para modernizar suas operações financeiras?",
   description = "Junte-se a centenas de empresas brasileiras modernas que usam o Crivo para automatizar sua rotina e focar no crescimento.",
-  ctaLabel = "Comece seu teste gratuito de 1 dia",
+  ctaLabel = "Comece seu teste grátis agora",
   ctaHref = "/signup",
   ctaIcon = <Rocket size={18} />,
 }: SectionCtaProps) => {
