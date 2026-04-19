@@ -41,7 +41,7 @@ export function useCompanies(initialParams?: CompanyQueryParams) {
   }, []);
 
   return {
-    rows: data?.data ?? [],
+    rows: data?.items ?? [],
     total: data?.total ?? 0,
     isLoading,
     isFetching,
