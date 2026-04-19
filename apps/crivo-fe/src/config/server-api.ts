@@ -1,9 +1,10 @@
-import { auth } from "./auth";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { env } from "./env";
 
 /**
  * Server-side fetch utility that bypasses Kong and calls the backend directly.
- * Automatically attaches the JWT token from the NextAuth session.
+ * Automatically attaches the Keycloak JWT from the Better Auth session.
  */
 export async function serverFetch<T>(
   path: string,
@@ -13,9 +14,13 @@ export async function serverFetch<T>(
     params?: Record<string, string | number | undefined>;
   },
 ): Promise<T> {
-  const session = await auth();
+  const reqHeaders = await headers();
+  const session = await auth.api.getSession({ headers: reqHeaders });
+  const accessToken = (session as Record<string, unknown>)?.accessToken as
+    | string
+    | undefined;
 
-  if (!session?.accessToken) {
+  if (!accessToken) {
     throw new Error("Unauthorized: no session token");
   }
 
@@ -31,7 +36,7 @@ export async function serverFetch<T>(
     method: options?.method ?? "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
   });
