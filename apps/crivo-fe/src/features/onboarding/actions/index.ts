@@ -1,7 +1,7 @@
 "use server";
 
-import { syncWithCrivo, activateCompany } from "../http";
-import type { SyncResponse, MockPaymentResponse } from "../types";
+import { serverFetch } from "@/config/server-api";
+import type { SetupCompanyInput, SetupCompanyResponse } from "../types";
 
 type ActionResult<T> = {
   success: boolean;
@@ -9,32 +9,30 @@ type ActionResult<T> = {
   data?: T;
 };
 
-export async function syncAction(
-  planId?: string,
-): Promise<ActionResult<SyncResponse>> {
+export async function setupCompanyAction(
+  input: SetupCompanyInput,
+): Promise<ActionResult<SetupCompanyResponse>> {
   try {
-    const data = await syncWithCrivo(planId);
+    const data = await serverFetch<SetupCompanyResponse>(
+      "/onboarding/setup-company",
+      { method: "POST", body: input },
+    );
     return { success: true, data };
-  } catch (error) {
-    console.error("[onboarding] sync failed:", error);
-    return {
-      success: false,
-      message: "Erro ao sincronizar com o servidor. Tente novamente.",
-    };
-  }
-}
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
 
-export async function activateCompanyAction(
-  companyId: string,
-): Promise<ActionResult<MockPaymentResponse>> {
-  try {
-    const data = await activateCompany(companyId);
-    return { success: true, data };
-  } catch (error) {
-    console.error("[onboarding] mock-payment failed:", error);
+    if (status === 409) {
+      return {
+        success: false,
+        message: "Você já possui uma empresa cadastrada.",
+      };
+    }
+
+    console.error("[onboarding] setup-company failed:", error);
     return {
       success: false,
-      message: "Erro ao ativar empresa. Tente novamente.",
+      message: "Erro ao configurar empresa. Tente novamente.",
     };
   }
 }
