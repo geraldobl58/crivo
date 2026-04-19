@@ -7,6 +7,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 
 import { Sidebar } from "../Sidebar";
 import { TopBar } from "../TopBar";
+import { SubscriptionGuard } from "../SubscriptionGuard";
 
 export const Wrapper = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -20,7 +21,7 @@ export const Wrapper = ({ children }: { children: React.ReactNode }) => {
       />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Box component="main" sx={{ flexGrow: 1 }}>
-        {children}
+        <SubscriptionGuard>{children}</SubscriptionGuard>
       </Box>
     </Box>
   );
